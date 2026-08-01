@@ -598,7 +598,6 @@ html[data-theme="dark"] .install-gate .ig-word{ color:var(--gold-300); }
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getFirestore, doc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
   import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
-  import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyA2VhtxIPLxp1oGFQsnUOFLRqpXSAqp754",
@@ -614,42 +613,89 @@ html[data-theme="dark"] .install-gate .ig-word{ color:var(--gold-300); }
 
   const app = initializeApp(firebaseConfig);
   const dbFs = getFirestore(app);
-  const storage = getStorage(app);
   let messaging = null;
   try { messaging = getMessaging(app); } catch(e) { console.warn('FCM not supported here', e); }
 
-  window.__fbStorage = {
+  // ===== رفع الفيديوهات مباشرة إلى Cloudflare R2 (بدون خادم وسيط) =====
+  // ⚠️ ملاحظة أمان: مفتاح R2 السري ظاهر بكود المتصفح (اختيار مقصود لتبسيط النشر).
+  // التوكن محدود بصلاحية "قراءة وكتابة" على بكل mydhikr-videos فقط، ما يقدر يوصل لأي مورد آخر بالحساب.
+  const R2_CONFIG = {
+    accountId: '7cc33e8f12e9eeff7bf75aa0c714d8b4',
+    accessKeyId: '5e096de6d1ef1e781630f80f0dbfc1cc',
+    secretAccessKey: 'f03a8056bb440fc48f4ad1b0276ff2d413e5196e0fa360771f9f9d7fc3842b4f',
+    bucket: 'mydhikr-videos',
+    publicUrl: 'https://pub-795b342752a746239c72e1c860126df7.r2.dev'
+  };
+
+  function _r2Hex(buf){
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  async function _r2Sha256Hex(str){
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return _r2Hex(buf);
+  }
+  async function _r2HmacRaw(keyBytes, msg){
+    const cryptoKey = await crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    return crypto.subtle.sign('HMAC', cryptoKey, new TextEncoder().encode(msg));
+  }
+  async function _r2SignAndBuildHeaders(method, bucket, key, host){
+    const now = new Date();
+    const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, ''); // YYYYMMDDTHHMMSSZ
+    const dateStamp = amzDate.slice(0, 8);
+    const payloadHash = 'UNSIGNED-PAYLOAD';
+    const canonicalUri = '/' + bucket + '/' + key;
+    const canonicalHeaders = `host:${host}\nx-amz-content-sha256:${payloadHash}\nx-amz-date:${amzDate}\n`;
+    const signedHeaders = 'host;x-amz-content-sha256;x-amz-date';
+    const canonicalRequest = `${method}\n${canonicalUri}\n\n${canonicalHeaders}\n${signedHeaders}\n${payloadHash}`;
+    const credentialScope = `${dateStamp}/auto/s3/aws4_request`;
+    const canonicalRequestHash = await _r2Sha256Hex(canonicalRequest);
+    const stringToSign = `AWS4-HMAC-SHA256\n${amzDate}\n${credentialScope}\n${canonicalRequestHash}`;
+
+    let k = await _r2HmacRaw(new TextEncoder().encode('AWS4' + R2_CONFIG.secretAccessKey), dateStamp);
+    k = await _r2HmacRaw(new Uint8Array(k), 'auto');
+    k = await _r2HmacRaw(new Uint8Array(k), 's3');
+    k = await _r2HmacRaw(new Uint8Array(k), 'aws4_request');
+    const signature = _r2Hex(await _r2HmacRaw(new Uint8Array(k), stringToSign));
+
+    const authorization = `AWS4-HMAC-SHA256 Credential=${R2_CONFIG.accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+    return { amzDate, payloadHash, authorization };
+  }
+
+  window.__r2Storage = {
     uploadVideo(file, onProgress){
-      return new Promise((resolve)=>{
+      return new Promise(async (resolve) => {
         try{
-          const path = 'foryou_videos/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-          const fileRef = ref(storage, path);
-          const task = uploadBytesResumable(fileRef, file);
-          task.on('state_changed',
-            (snap)=>{
-              const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
-              if(onProgress) onProgress(pct);
-            },
-            (err)=>{
-              console.error('upload failed', err);
-              resolve({ ok:false, error: String(err && err.code || err) });
-            },
-            async ()=>{
-              try{
-                const url = await getDownloadURL(task.snapshot.ref);
-                resolve({ ok:true, url });
-              }catch(e){
-                resolve({ ok:false, error: String(e) });
-              }
+          const key = 'foryou_videos/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+          const host = `${R2_CONFIG.accountId}.r2.cloudflarestorage.com`;
+          const url = `https://${host}/${R2_CONFIG.bucket}/${key}`;
+          const { amzDate, payloadHash, authorization } = await _r2SignAndBuildHeaders('PUT', R2_CONFIG.bucket, key, host);
+
+          const xhr = new XMLHttpRequest();
+          xhr.open('PUT', url, true);
+          xhr.setRequestHeader('x-amz-date', amzDate);
+          xhr.setRequestHeader('x-amz-content-sha256', payloadHash);
+          xhr.setRequestHeader('Authorization', authorization);
+          xhr.upload.onprogress = (e) => {
+            if(e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
+          };
+          xhr.onload = () => {
+            if(xhr.status >= 200 && xhr.status < 300){
+              resolve({ ok: true, url: `${R2_CONFIG.publicUrl}/${key}` });
+            }else{
+              console.error('R2 upload failed', xhr.status, xhr.responseText);
+              resolve({ ok: false, error: 'HTTP ' + xhr.status });
             }
-          );
+          };
+          xhr.onerror = () => resolve({ ok: false, error: 'network error' });
+          xhr.send(file);
         }catch(e){
           console.error('upload failed', e);
-          resolve({ ok:false, error: String(e && e.code || e) });
+          resolve({ ok: false, error: String(e && e.message || e) });
         }
       });
     }
   };
+  window.__fbStorage = window.__r2Storage; // إبقاء نفس الاسم القديم لعدم كسر أي استدعاء آخر بالكود
 
   window.__fbSync = {
     async push(code, payload){
