@@ -1373,12 +1373,12 @@ async function playAdhanAuto(prayerKey){
     rAudio.addEventListener('ended', ()=>{
       rAudio.dataset.playing = '';
       if(_ruqyahPlaylist){ ruqyahAdvance(); }
-      else if(DB.ui.tab === 'ruqyah'){ renderCurrentScreen(); }
+      else if(isRuqyahView()){ renderCurrentScreen(); }
     });
     rAudio.addEventListener('error', ()=>{
       _ruqyahPlaylist = null;
       rAudio.dataset.playing = '';
-      if(DB.ui.tab === 'ruqyah') renderCurrentScreen();
+      if(isRuqyahView()) renderCurrentScreen();
     });
   }
   const qAudio = document.getElementById('quran-audio');
@@ -1546,7 +1546,6 @@ const TABS = [
   {id:'tasbih', labelKey:'tab_tasbih', icon:tasbihIcon(15)},
   {id:'adhkar', labelKey:'tab_adhkar', icon:moonIcon(16)},
   {id:'quran', labelKey:'tab_quran', icon:bookIcon(16)},
-  {id:'ruqyah', labelKey:'tab_ruqyah', icon:shieldIcon(17)},
   {id:'foryou', labelKey:'tab_foryou', icon:sparkleIcon(16)},
 ];
 const screenRenderers = {};
@@ -1580,7 +1579,7 @@ function renderCurrentScreen(){
 function goTab(id){
   adhkarResetIfLeavingDetail();
   DB.ui.tab = id;
-  if(id === 'quran') DB.ui.quranView = 'list';
+  if(id === 'quran'){ DB.ui.quranView = 'list'; DB.ui.quranSection = 'quran'; }
   if(id === 'adhkar') DB.ui.adhkarView = 'grid';
   saveDB();
   renderShell();
@@ -3009,12 +3008,28 @@ function quranFilter(val){
   if(el) el.innerHTML = quranRowsHTML(filtered);
   quranRenderAyahResults(val);
 }
+function isRuqyahView(){ return DB.ui.tab === 'quran' && DB.ui.quranSection === 'ruqyah'; }
+function quranRuqyahSegment(){
+  const sec = DB.ui.quranSection || 'quran';
+  return `
+    <div style="display:flex; gap:8px; padding:0 16px 14px;">
+      <button onclick="quranRuqyahSetSection('quran')" style="flex:1; background:${sec==='quran'?'var(--gold-500)':'var(--green-100)'}; color:${sec==='quran'?'var(--green-900)':'var(--text)'}; border:none; padding:10px; border-radius:999px; font-weight:700; font-size:13px; cursor:pointer;">${t('tab_quran')}</button>
+      <button onclick="quranRuqyahSetSection('ruqyah')" style="flex:1; background:${sec==='ruqyah'?'var(--gold-500)':'var(--green-100)'}; color:${sec==='ruqyah'?'var(--green-900)':'var(--text)'}; border:none; padding:10px; border-radius:999px; font-weight:700; font-size:13px; cursor:pointer;">${t('tab_ruqyah')}</button>
+    </div>
+  `;
+}
+function quranRuqyahSetSection(sec){
+  DB.ui.quranSection = sec;
+  saveDB();
+  renderCurrentScreen();
+}
 function renderQuranList(){
   const term = quranSearchTerm.trim();
   const filtered = term ? SURAHS.filter(s=>s[1].includes(term) || String(s[0])===term) : SURAHS;
   const last = DB.quran.lastRead;
   return `
     <div class="topbar"><div><h1>${t('quran_title')}</h1><div class="sub">114 ${isEn()?'surahs':'سورة'}</div></div></div>
+    ${quranRuqyahSegment()}
     <div class="search-bar">
       <input type="text" placeholder="${t('quran_search_ph')}" value="${term}" oninput="quranFilter(this.value)">
       <span class="ic">${searchIcon(18)}</span>
@@ -3094,6 +3109,7 @@ async function loadSurahText(num){
 }
 
 screenRenderers.quran = function(){
+  if(DB.ui.quranSection === 'ruqyah') return renderRuqyah();
   return DB.ui.quranView === 'reader' ? renderQuranReader() : renderQuranList();
 };
 function loadReaderInto(num){
@@ -3419,11 +3435,11 @@ function ruqyahAdvance(){
   _ruqyahPlaylistIdx++;
   if(_ruqyahPlaylist && _ruqyahPlaylistIdx < _ruqyahPlaylist.length){
     ruqyahPlayStep(_ruqyahPlaylist[_ruqyahPlaylistIdx]);
-    if(DB.ui.tab === 'ruqyah') renderCurrentScreen();
+    if(isRuqyahView()) renderCurrentScreen();
   }else{
     _ruqyahPlaylist = null;
     _ruqyahSpeakingDuaIdx = -1;
-    if(DB.ui.tab === 'ruqyah'){ toast('تمت تلاوة الرقية كاملة'); renderCurrentScreen(); }
+    if(isRuqyahView()){ toast('تمت تلاوة الرقية كاملة'); renderCurrentScreen(); }
   }
 }
 function ruqyahLoadAndPlay(num){
@@ -3444,7 +3460,7 @@ function ruqyahSpeakDua(idx){
   if(!dua){ ruqyahAdvance(); return; }
   _ruqyahSpeakingDuaIdx = idx;
   if(!('speechSynthesis' in window)){
-    if(DB.ui.tab === 'ruqyah') renderCurrentScreen();
+    if(isRuqyahView()) renderCurrentScreen();
     setTimeout(()=>{ if(_ruqyahPlaylist) ruqyahAdvance(); }, 5000);
     return;
   }
@@ -3455,7 +3471,7 @@ function ruqyahSpeakDua(idx){
   utter.onend = ()=>{ if(_ruqyahPlaylist) ruqyahAdvance(); };
   utter.onerror = ()=>{ if(_ruqyahPlaylist) ruqyahAdvance(); };
   window.speechSynthesis.speak(utter);
-  if(DB.ui.tab === 'ruqyah') renderCurrentScreen();
+  if(isRuqyahView()) renderCurrentScreen();
 }
 function ruqyahPlayStep(item){
   if(item.type === 'surah') ruqyahLoadAndPlay(item.num);
@@ -3502,6 +3518,7 @@ function renderRuqyah(){
   const nowPlaying = audio ? audio.dataset.playing : '';
   return `
     <div class="topbar"><div><h1>${t('ruqyah_title')}</h1><div class="sub">${t('ruqyah_sub')}</div></div></div>
+    ${quranRuqyahSegment()}
 
     <div class="field" style="margin:14px 16px 16px">
       <label>${t('reciter')}</label>
@@ -3549,7 +3566,7 @@ function renderRuqyah(){
     </div>
   `;
 }
-screenRenderers.ruqyah = renderRuqyah;
+// تمت إزالة تسجيل شاشة "ruqyah" المستقلة — أصبحت جزءًا من تاب "القرآن" (انظر screenRenderers.quran أعلاه)
 const FORYOU_STATE = { videos: [], loading: false, loaded: false, error: false };
 async function loadForYouContent(force){
   if(FORYOU_STATE.loading) return;
