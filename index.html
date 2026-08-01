@@ -127,6 +127,56 @@ html[data-theme="dark"] .brand-row .word{ color:var(--gold-300); }
 .tab.active{color:var(--green-800); font-weight:700; background:var(--gold-100);}
 .tab.active .dot{color:var(--green-800);}
 
+/* ---------- for-you: fullscreen TikTok-style feed ---------- */
+.foryou-feed{
+  position:absolute; top:0; left:0; right:0;
+  bottom:calc(84px + var(--safe-bottom));
+  overflow-y:auto; overflow-x:hidden;
+  scroll-snap-type:y mandatory;
+  background:#000;
+  -webkit-overflow-scrolling:touch;
+}
+.foryou-feed::-webkit-scrollbar{display:none;}
+.foryou-item{
+  position:relative; width:100%; height:100%;
+  scroll-snap-align:start; scroll-snap-stop:always;
+  background:#000; overflow:hidden;
+}
+.foryou-item video{
+  width:100%; height:100%; object-fit:cover; display:block; background:#000;
+}
+.foryou-caption-scrim{
+  position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(to top, rgba(0,0,0,.6) 0%, rgba(0,0,0,.15) 22%, rgba(0,0,0,0) 42%),
+             linear-gradient(to bottom, rgba(0,0,0,.45) 0%, rgba(0,0,0,0) 18%);
+}
+.foryou-caption{
+  position:absolute; right:16px; left:16px;
+  bottom:calc(20px + var(--safe-bottom));
+  color:#fff; font-size:14px; font-weight:700;
+  text-shadow:0 1px 6px rgba(0,0,0,.5);
+  z-index:2;
+}
+.foryou-topbrand{
+  position:absolute; top:calc(14px + var(--safe-top)); right:18px; left:18px;
+  z-index:2; display:flex; align-items:center; justify-content:space-between;
+  pointer-events:none;
+}
+.foryou-topbrand .word{color:#fff; font-weight:800; font-size:15px; text-shadow:0 1px 6px rgba(0,0,0,.5);}
+.foryou-mute-btn{
+  pointer-events:auto;
+  width:34px; height:34px; border-radius:50%; border:none; cursor:pointer;
+  background:rgba(0,0,0,.4); color:#fff; font-size:15px;
+  display:flex; align-items:center; justify-content:center;
+  backdrop-filter:blur(4px);
+}
+.foryou-mute-btn:active{transform:scale(.92);}
+.foryou-empty-wrap{
+  position:absolute; top:0; left:0; right:0;
+  bottom:calc(84px + var(--safe-bottom));
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+
 /* ---------- home: next-prayer ring ---------- */
 .prayer-hero{
   margin:0 16px 14px; border-radius:var(--radius-card);
@@ -3520,37 +3570,77 @@ async function loadForYouContent(force){
 async function saveForYouContent(){
   await window.__fbSync.push('foryou_content', { videos: FORYOU_STATE.videos });
 }
+let _foryouMuted = true;
 function renderForYou(){
   loadForYouContent();
   const activeVideos = FORYOU_STATE.videos.filter(v => v.active !== false);
-  let body;
+
   if(FORYOU_STATE.loading && !FORYOU_STATE.loaded){
-    body = `<div class="card" style="text-align:center; padding:40px 20px; color:var(--text-muted);">${isEn() ? 'Loading…' : 'جاري التحميل…'}</div>`;
-  }else if(FORYOU_STATE.error){
-    body = `<div class="card" style="text-align:center; padding:40px 20px; color:var(--text-muted);">${isEn() ? 'Could not load content' : 'تعذر تحميل المحتوى'}</div>`;
-  }else if(!activeVideos.length){
-    body = `
-      <div class="card" style="text-align:center; padding:40px 20px; color:var(--text-muted);">
-        ${sparkleIcon(34)}
-        <div style="margin-top:14px; font-weight:700; font-size:15px; color:var(--text);">${isEn() ? 'Coming soon' : 'قريباً'}</div>
-        <div style="margin-top:6px; font-size:13px;">${isEn() ? 'This section is being prepared for you.' : 'هذا القسم قيد التجهيز لك.'}</div>
-      </div>`;
-  }else{
-    body = activeVideos.map(v => `
-      <div class="card" style="padding:0; overflow:hidden; margin-bottom:14px;">
-        <video src="${v.url}" controls playsinline style="width:100%; max-height:70vh; display:block; background:#000;"></video>
-        ${v.title ? `<div style="padding:10px 14px; font-size:13.5px; font-weight:700;">${v.title}</div>` : ''}
-      </div>
-    `).join('');
+    return `<div class="foryou-empty-wrap"><div style="color:var(--text-muted); text-align:center;">${isEn() ? 'Loading…' : 'جاري التحميل…'}</div></div>`;
   }
+  if(FORYOU_STATE.error){
+    return `<div class="foryou-empty-wrap"><div style="color:var(--text-muted); text-align:center;">${isEn() ? 'Could not load content' : 'تعذر تحميل المحتوى'}</div></div>`;
+  }
+  if(!activeVideos.length){
+    return `
+      <div class="foryou-empty-wrap">
+        <div class="card" style="text-align:center; padding:40px 20px; color:var(--text-muted); margin:0;">
+          ${sparkleIcon(34)}
+          <div style="margin-top:14px; font-weight:700; font-size:15px; color:var(--text);">${isEn() ? 'Coming soon' : 'قريباً'}</div>
+          <div style="margin-top:6px; font-size:13px;">${isEn() ? 'This section is being prepared for you.' : 'هذا القسم قيد التجهيز لك.'}</div>
+        </div>
+      </div>`;
+  }
+
   return `
-    <div class="topbar">
-      <div><h1>${t('tab_foryou')}</h1><div class="sub">${isEn() ? 'Personalized content, just for you' : 'محتوى مخصص لك أنت'}</div></div>
+    <div class="foryou-feed" id="foryou-feed">
+      ${activeVideos.map((v, i) => `
+        <div class="foryou-item">
+          <video src="${v.url}" loop playsinline ${_foryouMuted ? 'muted' : ''} preload="metadata" data-idx="${i}"></video>
+          <div class="foryou-caption-scrim"></div>
+          <div class="foryou-topbrand">
+            <span class="word">${t('tab_foryou')}</span>
+            <button class="foryou-mute-btn" onclick="toggleForYouMute()" id="foryou-mute-icon">${_foryouMuted ? '🔇' : '🔊'}</button>
+          </div>
+          ${v.title ? `<div class="foryou-caption">${v.title}</div>` : ''}
+        </div>
+      `).join('')}
     </div>
-    ${body}
   `;
 }
 screenRenderers.foryou = renderForYou;
+
+function toggleForYouMute(){
+  _foryouMuted = !_foryouMuted;
+  document.querySelectorAll('.foryou-item video').forEach(v => { v.muted = _foryouMuted; });
+  const icon = document.getElementById('foryou-mute-icon');
+  if(icon) icon.textContent = _foryouMuted ? '🔇' : '🔊';
+}
+
+let _foryouObserver = null;
+function after_foryou(){
+  const feed = document.getElementById('foryou-feed');
+  if(!feed) return;
+  if(_foryouObserver) _foryouObserver.disconnect();
+  const videos = Array.from(feed.querySelectorAll('video'));
+  _foryouObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const v = entry.target;
+      if(entry.isIntersecting && entry.intersectionRatio >= 0.6){
+        v.currentTime = v.currentTime || 0;
+        v.play().catch(() => {});
+      }else{
+        v.pause();
+      }
+    });
+  }, { root: feed, threshold: [0, 0.6, 1] });
+  videos.forEach(v => {
+    v.muted = _foryouMuted;
+    _foryouObserver.observe(v);
+    v.addEventListener('click', () => { v.paused ? v.play().catch(()=>{}) : v.pause(); });
+  });
+  if(videos[0]) videos[0].play().catch(() => {});
+}
 
 /* ============================== لوحة تحكم المطوّر (مخفية) ============================== */
 let _versionTapCount = 0;
