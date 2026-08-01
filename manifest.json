@@ -1,0 +1,26 @@
+{
+  "id": "/",
+  "name": "ذكر — أذكار، سبحة ومواقيت الصلاة",
+  "short_name": "ذكر",
+  "description": "تطبيق الأذكار اليومية، السبحة الذكية، مواقيت الصلاة، القرآن الكريم واتجاه القبلة",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF7F0",
+  "theme_color": "#173D2F",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
+    { "src": "icons/screenshots/shot-home.png", "sizes": "780x1688", "type": "image/png", "form_factor": "narrow", "label": "الرئيسية — مواقيت الصلاة والورد اليومي" },
+    { "src": "icons/screenshots/shot-tasbih.png", "sizes": "780x1688", "type": "image/png", "form_factor": "narrow", "label": "السبحة الذكية" },
+    { "src": "icons/screenshots/shot-adhkar.png", "sizes": "780x1688", "type": "image/png", "form_factor": "narrow", "label": "الأذكار" },
+    { "src": "icons/screenshots/shot-wide.png", "sizes": "1280x800", "type": "image/png", "form_factor": "wide", "label": "ذكر على الشاشات الكبيرة" }
+  ]
+}
