@@ -3724,6 +3724,7 @@ async function loadForYouContent(force){
   if(DB.ui.tab === 'foryou') renderCurrentScreen();
   updateForYouBadge();
 }
+async function saveForYouContent(){
   await window.__fbSync.push('foryou_content', { videos: FORYOU_STATE.videos }, true);
 }
 let _foryouMuted = true;
