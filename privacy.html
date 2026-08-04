@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سياسة الخصوصية - ذكر (mydhikr)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0f1712;
+    --panel:#16221b;
+    --text:#e9efe8;
+    --muted:#9db3a4;
+    --accent:#3f8f5f;
+    --accent-soft:#1f3a29;
+    --border:#233428;
+    --font: 'Cairo', 'Tahoma', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font);
+    font-weight:400;
+    line-height:1.9;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:760px;
+    margin:0 auto;
+    padding:48px 24px 80px;
+  }
+  header{
+    text-align:center;
+    margin-bottom:40px;
+  }
+  header .badge{
+    display:inline-block;
+    background:var(--accent-soft);
+    color:var(--accent);
+    padding:7px 18px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:.3px;
+    margin-bottom:18px;
+  }
+  h1{
+    font-size:32px;
+    font-weight:800;
+    letter-spacing:-.3px;
+    margin:0 0 10px;
+  }
+  header p.sub{
+    color:var(--muted);
+    font-size:14.5px;
+    font-weight:500;
+    margin:0;
+  }
+  section{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:24px 28px;
+    margin-bottom:18px;
+  }
+  section h2{
+    font-size:19px;
+    font-weight:700;
+    color:var(--accent);
+    margin:0 0 14px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  section p, section li{
+    color:var(--text);
+    font-size:15.5px;
+    font-weight:400;
+  }
+  section strong{font-weight:700;color:#fff;}
+  section ul{
+    margin:8px 0 0;
+    padding-inline-start:20px;
+  }
+  section li{margin-bottom:9px;}
+  .note{
+    background:var(--accent-soft);
+    border:1px solid var(--accent);
+    border-radius:10px;
+    padding:14px 18px;
+    font-size:14.5px;
+    font-weight:500;
+    color:var(--text);
+  }
+  a{color:var(--accent);text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:13px;
+    margin-top:32px;
+  }
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14.5px;}
+  th,td{border:1px solid var(--border);padding:11px 12px;text-align:right;font-weight:400;}
+  th{background:var(--accent-soft);color:var(--accent);font-weight:700;}
+  footer{font-weight:500;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="badge">سياسة الخصوصية</div>
+    <h1>تطبيق ذكر (mydhikr)</h1>
+    <p class="sub">آخر تحديث: أغسطس 2026</p>
+  </header>
+
+  <section>
+    <h2>📌 نظرة عامة</h2>
+    <p>
+      تطبيق "ذكر" هو تطبيق إسلامي لعرض الأذكار، القرآن الكريم، ومواقيت الصلاة.
+      نحترم خصوصيتك، ولذلك بُني التطبيق بحيث <strong>لا يتطلب إنشاء حساب أو تسجيل دخول</strong>
+      لاستخدام أي من ميزاته الأساسية.
+    </p>
+  </section>
+
+  <section>
+    <h2>📦 البيانات التي نجمعها</h2>
+    <p>لا يجمع التطبيق أي بيانات شخصية تعريفية (مثل الاسم أو البريد الإلكتروني أو رقم الهاتف). البيانات المحدودة التالية تُجمع فقط عند استخدامك لميزات اختيارية معيّنة:</p>
+    <table>
+      <tr><th>الميزة</th><th>ما يُجمع</th><th>الغرض</th></tr>
+      <tr>
+        <td>الإشعارات (التذكير بالأذكار/الصلاة)</td>
+        <td>معرّف جهاز مشفّر (رمز إشعارات Push) عبر Firebase Cloud Messaging</td>
+        <td>إرسال تنبيهات مواقيت الصلاة والتذكير بالأذكار فقط</td>
+      </tr>
+      <tr>
+        <td>المزامنة بين الأجهزة (اختيارية)</td>
+        <td>رمز مزامنة تُنشئه أنت بنفسك + تفضيلاتك وتقدمك داخل التطبيق</td>
+        <td>مزامنة مفضلاتك وتقدمك بين أجهزتك عند تفعيل الميزة فقط</td>
+      </tr>
+      <tr>
+        <td>تشغيل الفيديوهات</td>
+        <td>لا يتم جمع أي بيانات شخصية؛ الفيديوهات تُعرض من خادم تخزين (Cloudflare R2)</td>
+        <td>تحميل وعرض محتوى الفيديو داخل التطبيق</td>
+      </tr>
+    </table>
+    <p style="margin-top:14px;">
+      رمز المزامنة الذي تُنشئه لا يحتوي على أي معلومة تكشف هويتك، وهو مجرد كود عشوائي تختاره أو يُولّد لك للربط بين أجهزتك أنت فقط.
+    </p>
+  </section>
+
+  <section>
+    <h2>🚫 ما لا نفعله</h2>
+    <ul>
+      <li>لا نستخدم أي أدوات تحليلات إعلانية أو تتبع من طرف ثالث (لا Google Analytics، لا AdMob، لا أي إعلانات).</li>
+      <li>لا نبيع بياناتك ولا نشاركها مع أي طرف ثالث لأغراض تسويقية.</li>
+      <li>لا نطلب أذونات الوصول لجهات الاتصال أو الموقع الجغرافي أو الكاميرا.</li>
+      <li>لا يوجد أي نظام تسجيل دخول أو حسابات مستخدمين.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>🗂️ أين تُخزَّن بياناتك</h2>
+    <p>
+      البيانات المحدودة المذكورة أعلاه (رمز الإشعارات، بيانات المزامنة الاختيارية) تُخزَّن باستخدام
+      <strong>Google Firebase (Firestore)</strong>، وهي خدمة سحابية موثوقة تتبع معايير أمان Google.
+      محتوى الفيديو يُخزَّن ويُعرض عبر <strong>Cloudflare R2</strong> لأغراض الأداء والسرعة فقط، دون ربطه ببيانات شخصية.
+    </p>
+  </section>
+
+  <section>
+    <h2>🗑️ حذف بياناتك</h2>
+    <p>يمكنك حذف بياناتك في أي وقت بالطرق التالية:</p>
+    <ul>
+      <li><strong>إيقاف الإشعارات:</strong> من إعدادات التطبيق أو إعدادات نظام هاتفك، وسيُحذف رمز الإشعار المرتبط بجهازك.</li>
+      <li><strong>إيقاف المزامنة:</strong> بحذف رمز المزامنة من داخل التطبيق، ما يحذف تلقائيًا نسخة بياناتك المرتبطة به.</li>
+      <li><strong>طلب حذف يدوي:</strong> بمراسلتنا على البريد الإلكتروني أدناه مع ذكر رمز المزامنة (إن وُجد)، وسنقوم بحذف أي بيانات مرتبطة به خلال فترة معقولة.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>👶 الأطفال</h2>
+    <p>
+      التطبيق مناسب لجميع الأعمار ولا يحتوي على محتوى غير مناسب. لا نجمع عمدًا أي بيانات شخصية من الأطفال،
+      وبما أن التطبيق لا يتطلب حسابًا أو معلومات شخصية، فلا يوجد خطر مباشر يتعلق بجمع بيانات الأطفال.
+    </p>
+  </section>
+
+  <section>
+    <h2>🔄 تحديثات هذه السياسة</h2>
+    <p>
+      قد نُحدّث هذه السياسة من وقت لآخر لتعكس أي تغييرات في ميزات التطبيق. سيظهر تاريخ آخر تحديث دائمًا في أعلى هذه الصفحة.
+      استخدامك المستمر للتطبيق بعد أي تحديث يُعد موافقة على السياسة المُحدَّثة.
+    </p>
+  </section>
+
+  <section>
+    <h2>📧 تواصل معنا</h2>
+    <p class="note">
+      لأي استفسار متعلق بالخصوصية أو لطلب حذف بياناتك، تواصل معنا على:<br>
+      <a href="mailto:mhaidrh506@gmail.com">mhaidrh506@gmail.com</a>
+    </p>
+  </section>
+
+  <footer>
+    ذكر (mydhikr) — تطبيق أذكار وقرآن كريم ومواقيت صلاة
+  </footer>
+
+</div>
+</body>
+</html>
