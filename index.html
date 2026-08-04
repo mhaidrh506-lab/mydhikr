@@ -171,6 +171,28 @@ html[data-theme="dark"] .brand-row .word{ color:var(--gold-300); }
   backdrop-filter:blur(4px);
 }
 .foryou-mute-btn:active{transform:scale(.92);}
+.foryou-actions{
+  position:absolute; left:12px;
+  bottom:calc(60px + var(--safe-bottom));
+  z-index:2; display:flex; flex-direction:column; align-items:center; gap:18px;
+}
+.foryou-action-btn{
+  pointer-events:auto; background:none; border:none; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  color:#fff; padding:0;
+}
+.foryou-action-btn .foryou-action-icon{
+  width:42px; height:42px; border-radius:50%;
+  background:rgba(0,0,0,.35); backdrop-filter:blur(4px);
+  display:flex; align-items:center; justify-content:center;
+  transition:transform .15s ease;
+}
+.foryou-action-btn:active .foryou-action-icon{transform:scale(.88);}
+.foryou-action-btn.liked .foryou-action-icon{color:#ef4444;}
+.foryou-action-count{
+  font-size:11.5px; font-weight:700; color:#fff;
+  text-shadow:0 1px 4px rgba(0,0,0,.6);
+}
 .foryou-empty-wrap{
   position:absolute; top:0; left:0; right:0;
   bottom:calc(84px + var(--safe-bottom));
@@ -646,7 +668,7 @@ html[data-theme="dark"] .install-gate .ig-word{ color:var(--gold-300); }
 <audio id="quran-audio" preload="none"></audio>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, doc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { getFirestore, doc, setDoc, getDoc, deleteDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
   import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 
   const firebaseConfig = {
@@ -748,9 +770,9 @@ html[data-theme="dark"] .install-gate .ig-word{ color:var(--gold-300); }
   window.__fbStorage = window.__r2Storage; // إبقاء نفس الاسم القديم لعدم كسر أي استدعاء آخر بالكود
 
   window.__fbSync = {
-    async push(code, payload){
+    async push(code, payload, merge){
       try{
-        await setDoc(doc(dbFs, 'syncs', code), payload);
+        await setDoc(doc(dbFs, 'syncs', code), payload, merge ? { merge: true } : undefined);
         return true;
       }catch(e){ console.error('fb push failed', e); return false; }
     },
@@ -759,6 +781,19 @@ html[data-theme="dark"] .install-gate .ig-word{ color:var(--gold-300); }
         const snap = await getDoc(doc(dbFs, 'syncs', code));
         return snap.exists() ? snap.data() : null;
       }catch(e){ console.error('fb pull failed', e); return null; }
+    },
+    // زيادة/تقليل عداد (مشاهدات أو إعجابات) بشكل آمن حتى مع عدة مستخدمين بنفس الوقت
+    async bumpStat(code, videoId, field, delta){
+      try{
+        await updateDoc(doc(dbFs, 'syncs', code), { [`stats.${videoId}.${field}`]: increment(delta) });
+        return true;
+      }catch(e){
+        // أول مرة يُكتب فيها هذا الفيديو، الحقل غير موجود بعد
+        try{
+          await setDoc(doc(dbFs, 'syncs', code), { stats: { [videoId]: { [field]: delta } } }, { merge: true });
+          return true;
+        }catch(e2){ console.error('fb bumpStat failed', e2); return false; }
+      }
     }
   };
 
@@ -1404,7 +1439,13 @@ function toast(msg){
   window._toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
 }
 function pad2(n){ return String(n).padStart(2,'0'); }
-function fmtClock(d){ return pad2(d.getHours())+':'+pad2(d.getMinutes()); }
+function fmtClock(d){
+  let h = d.getHours();
+  const suffix = isEn() ? (h < 12 ? 'AM' : 'PM') : (h < 12 ? 'ص' : 'م');
+  h = h % 12;
+  if(h === 0) h = 12;
+  return h + ':' + pad2(d.getMinutes()) + ' ' + suffix;
+}
 function fmtCountdown(ms){
   if(ms < 0) ms = 0;
   const h = Math.floor(ms/3600000), m = Math.floor((ms%3600000)/60000), s = Math.floor((ms%60000)/1000);
@@ -2068,7 +2109,7 @@ function after_home(){
 }
 
 /* ============================== TASBIH (السبحة الذكية) ============================== */
-const DHIKR_TYPES = ['استغفر الله','سبحان الله','لا إله إلا الله','الله أكبر','الحمد لله','الصلاة على النبي'];
+const DHIKR_TYPES = ['استغفر الله','سبحان الله وبحمده','سبحان الله العظيم','سبحان الله','الحمد لله','لا إله إلا الله','الله أكبر','لا حول ولا قوة إلا بالله','اللهم صل وسلم على نبينا محمد'];
 
 function tasbihTodayCounts(){
   const k = todayKey();
@@ -2540,6 +2581,50 @@ function shieldIcon(size){
   return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle" aria-hidden="true">
     <path d="M12 3l7 3v6c0 5-3.3 7.8-7 9-3.7-1.2-7-4-7-9V6l7-3z"></path>
     <path d="M9.3 12.2l1.9 1.9 3.5-3.9"></path>
+  </svg>`;
+}
+function volumeIcon(size, muted){
+  size = size || 18;
+  if(muted){
+    return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle" aria-hidden="true">
+      <path d="M11 5L6 9H3v6h3l5 4V5z"></path>
+      <line x1="16" y1="9" x2="21" y2="15"></line>
+      <line x1="21" y1="9" x2="16" y2="15"></line>
+    </svg>`;
+  }
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle" aria-hidden="true">
+    <path d="M11 5L6 9H3v6h3l5 4V5z"></path>
+    <path d="M15.5 8.5a5 5 0 0 1 0 7"></path>
+    <path d="M18 6a9 9 0 0 1 0 12"></path>
+  </svg>`;
+}
+function heartIcon(size, filled){
+  size = size || 20;
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="${filled ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle" aria-hidden="true">
+    <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"></path>
+  </svg>`;
+}
+function eyeIcon(size){
+  size = size || 18;
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle" aria-hidden="true">
+    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path>
+    <circle cx="12" cy="12" r="3"></circle>
+  </svg>`;
+}
+function downloadIcon(size){
+  size = size || 20;
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle" aria-hidden="true">
+    <path d="M12 3v13"></path>
+    <path d="M7 11l5 5 5-5"></path>
+    <path d="M5 21h14"></path>
+  </svg>`;
+}
+function shareForwardIcon(size){
+  size = size || 20;
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle" aria-hidden="true">
+    <path d="M4 12v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"></path>
+    <path d="M16 6l-4-4-4 4"></path>
+    <path d="M12 2v14"></path>
   </svg>`;
 }
 function sparkleIcon(size){
@@ -3567,7 +3652,7 @@ function renderRuqyah(){
   `;
 }
 // تمت إزالة تسجيل شاشة "ruqyah" المستقلة — أصبحت جزءًا من تاب "القرآن" (انظر screenRenderers.quran أعلاه)
-const FORYOU_STATE = { videos: [], loading: false, loaded: false, error: false };
+const FORYOU_STATE = { videos: [], stats: {}, loading: false, loaded: false, error: false };
 async function loadForYouContent(force){
   if(FORYOU_STATE.loading) return;
   if(FORYOU_STATE.loaded && !force) return;
@@ -3578,6 +3663,7 @@ async function loadForYouContent(force){
     const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000));
     const data = await Promise.race([window.__fbSync.pull('foryou_content'), timeout]);
     FORYOU_STATE.videos = (data && Array.isArray(data.videos)) ? data.videos : [];
+    FORYOU_STATE.stats = (data && data.stats && typeof data.stats === 'object') ? data.stats : {};
     FORYOU_STATE.loaded = true;
   }catch(e){
     FORYOU_STATE.error = true;
@@ -3586,7 +3672,7 @@ async function loadForYouContent(force){
   if(DB.ui.tab === 'foryou') renderCurrentScreen();
 }
 async function saveForYouContent(){
-  await window.__fbSync.push('foryou_content', { videos: FORYOU_STATE.videos });
+  await window.__fbSync.push('foryou_content', { videos: FORYOU_STATE.videos }, true);
 }
 let _foryouMuted = true;
 function renderForYou(){
@@ -3615,30 +3701,112 @@ function renderForYou(){
 
   return `
     <div class="foryou-feed" id="foryou-feed">
-      ${activeVideos.map((v, i) => `
-        <div class="foryou-item">
-          <video src="${v.url}" loop playsinline ${_foryouMuted ? 'muted' : ''} preload="metadata" data-idx="${i}"></video>
+      ${activeVideos.map((v, i) => {
+        const vid = v.id || ('idx' + i);
+        const stat = FORYOU_STATE.stats[vid] || {};
+        const liked = foryouIsLiked(vid);
+        return `
+        <div class="foryou-item" data-vid="${vid}">
+          <video src="${v.url}" loop playsinline ${_foryouMuted ? 'muted' : ''} preload="metadata" data-idx="${i}" data-vid="${vid}"></video>
           <div class="foryou-caption-scrim"></div>
           <div class="foryou-topbrand">
             <span class="word">${t('tab_foryou')}</span>
-            <button class="foryou-mute-btn" onclick="toggleForYouMute()" id="foryou-mute-icon">${_foryouMuted ? '🔇' : '🔊'}</button>
+            <button class="foryou-mute-btn" onclick="toggleForYouMute()" id="foryou-mute-icon">${volumeIcon(16, _foryouMuted)}</button>
+          </div>
+          <div class="foryou-actions">
+            <button class="foryou-action-btn ${liked ? 'liked' : ''}" onclick="foryouToggleLike('${vid}')">
+              <span class="foryou-action-icon">${heartIcon(20, liked)}</span>
+              <span class="foryou-action-count">${foryouFormatCount(stat.likes)}</span>
+            </button>
+            <div class="foryou-action-btn">
+              <span class="foryou-action-icon">${eyeIcon(19)}</span>
+              <span class="foryou-action-count">${foryouFormatCount(stat.views)}</span>
+            </div>
+            <button class="foryou-action-btn" onclick="foryouDownload('${v.url}')">
+              <span class="foryou-action-icon">${downloadIcon(19)}</span>
+            </button>
+            <button class="foryou-action-btn" onclick="foryouShare('${v.url}')">
+              <span class="foryou-action-icon">${shareForwardIcon(19)}</span>
+            </button>
           </div>
           ${v.title ? `<div class="foryou-caption">${v.title}</div>` : ''}
         </div>
-      `).join('')}
+      `;}).join('')}
     </div>
   `;
 }
 screenRenderers.foryou = renderForYou;
 
+function foryouFormatCount(n){
+  n = n || 0;
+  if(n >= 1000000) return (n/1000000).toFixed(1).replace(/\.0$/,'') + (isEn()?'M':'م');
+  if(n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + (isEn()?'K':'ألف');
+  return String(n);
+}
+function foryouIsLiked(vid){
+  DB.foryouLikes = DB.foryouLikes || {};
+  return !!DB.foryouLikes[vid];
+}
+async function foryouToggleLike(vid){
+  DB.foryouLikes = DB.foryouLikes || {};
+  const nowLiked = !DB.foryouLikes[vid];
+  if(nowLiked) DB.foryouLikes[vid] = true;
+  else delete DB.foryouLikes[vid];
+  saveDB();
+  FORYOU_STATE.stats[vid] = FORYOU_STATE.stats[vid] || {};
+  FORYOU_STATE.stats[vid].likes = (FORYOU_STATE.stats[vid].likes || 0) + (nowLiked ? 1 : -1);
+  renderCurrentScreen();
+  await window.__fbSync.bumpStat('foryou_content', vid, 'likes', nowLiked ? 1 : -1);
+}
+async function foryouRegisterView(vid){
+  _foryouViewedThisSession = _foryouViewedThisSession || {};
+  if(_foryouViewedThisSession[vid]) return;
+  _foryouViewedThisSession[vid] = true;
+  FORYOU_STATE.stats[vid] = FORYOU_STATE.stats[vid] || {};
+  FORYOU_STATE.stats[vid].views = (FORYOU_STATE.stats[vid].views || 0) + 1;
+  const counters = document.querySelectorAll(`.foryou-item[data-vid="${vid}"] .foryou-action-btn .foryou-action-count`);
+  if(counters[1]) counters[1].textContent = foryouFormatCount(FORYOU_STATE.stats[vid].views);
+  await window.__fbSync.bumpStat('foryou_content', vid, 'views', 1);
+}
+async function foryouDownload(url){
+  try{
+    toast(isEn() ? 'Downloading…' : 'جاري التنزيل…');
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = 'mydhikr-video.mp4';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 4000);
+  }catch(e){
+    toast(isEn() ? 'Download failed' : 'تعذر تنزيل الفيديو');
+  }
+}
+async function foryouShare(url){
+  if(navigator.share){
+    try{ await navigator.share({ url, title: 'MyDhikr' }); }catch(e){}
+  }else{
+    try{
+      await navigator.clipboard.writeText(url);
+      toast(isEn() ? 'Link copied' : 'تم نسخ الرابط');
+    }catch(e){
+      toast(isEn() ? 'Could not share' : 'تعذر المشاركة');
+    }
+  }
+}
+
 function toggleForYouMute(){
   _foryouMuted = !_foryouMuted;
   document.querySelectorAll('.foryou-item video').forEach(v => { v.muted = _foryouMuted; });
   const icon = document.getElementById('foryou-mute-icon');
-  if(icon) icon.textContent = _foryouMuted ? '🔇' : '🔊';
+  if(icon) icon.innerHTML = volumeIcon(16, _foryouMuted);
 }
 
 let _foryouObserver = null;
+let _foryouViewedThisSession = {};
 function after_foryou(){
   const feed = document.getElementById('foryou-feed');
   if(!feed) return;
@@ -3650,6 +3818,7 @@ function after_foryou(){
       if(entry.isIntersecting && entry.intersectionRatio >= 0.6){
         v.currentTime = v.currentTime || 0;
         v.play().catch(() => {});
+        if(v.dataset.vid) foryouRegisterView(v.dataset.vid);
       }else{
         v.pause();
       }
@@ -3660,7 +3829,10 @@ function after_foryou(){
     _foryouObserver.observe(v);
     v.addEventListener('click', () => { v.paused ? v.play().catch(()=>{}) : v.pause(); });
   });
-  if(videos[0]) videos[0].play().catch(() => {});
+  if(videos[0]){
+    videos[0].play().catch(() => {});
+    if(videos[0].dataset.vid) foryouRegisterView(videos[0].dataset.vid);
+  }
 }
 
 /* ============================== لوحة تحكم المطوّر (مخفية) ============================== */
