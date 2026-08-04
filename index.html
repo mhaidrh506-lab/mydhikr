@@ -423,6 +423,27 @@ html[data-theme="dark"] .counter-dial.classic .num{ color:var(--mint); }
 html[data-theme="dark"] .tasbih-style-menu{ border-color:rgba(255,255,255,.06); }
 html[data-theme="dark"] .tasbih-style-menu button.active{ background:var(--green-100); color:var(--mint); }
 html[data-theme="dark"] .tasbih-style-btn{ color:var(--mint); }
+.tasbih-phrase-dd{position:relative; align-self:center;}
+.tasbih-phrase-btn{
+  display:flex; align-items:center; gap:8px; padding:12px 20px; border-radius:999px;
+  background:var(--green-100); color:var(--green-800); border:none; font-size:15px; font-weight:700; cursor:pointer;
+  box-shadow:var(--shadow-card);
+}
+.tasbih-phrase-btn:active{transform:scale(.97);}
+.tasbih-phrase-menu{
+  position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%); z-index:60; min-width:230px; max-width:80vw;
+  background:var(--surface); border-radius:14px; box-shadow:var(--shadow-card); border:1px solid var(--green-100);
+  padding:6px; display:none; max-height:280px; overflow-y:auto;
+}
+.tasbih-phrase-menu.open{display:block;}
+.tasbih-phrase-menu button{
+  width:100%; display:flex; align-items:center; padding:11px 14px; border-radius:10px;
+  background:none; border:none; font-size:14px; color:var(--text); cursor:pointer; text-align:center; font-family:inherit;
+}
+.tasbih-phrase-menu button.active{background:var(--green-50); color:var(--green-800); font-weight:700;}
+html[data-theme="dark"] .tasbih-phrase-menu{ border-color:rgba(255,255,255,.06); }
+html[data-theme="dark"] .tasbih-phrase-menu button.active{ background:var(--green-100); color:var(--mint); }
+html[data-theme="dark"] .tasbih-phrase-btn{ color:var(--mint); }
 html[data-theme="dark"] .tasbih-vibrate-btn{ color:var(--mint); }
 
 .tasbih-actions{display:flex; gap:10px; margin:18px 16px 6px;}
@@ -2241,6 +2262,16 @@ function closeTasbihStyleMenu(){
   _tasbihStyleMenuOpen = false;
   renderCurrentScreen();
 }
+let _tasbihPhraseMenuOpen = false;
+function toggleTasbihPhraseMenu(event){
+  if(event) event.stopPropagation();
+  _tasbihPhraseMenuOpen = !_tasbihPhraseMenuOpen;
+  renderCurrentScreen();
+}
+function closeTasbihPhraseMenu(){
+  _tasbihPhraseMenuOpen = false;
+  renderCurrentScreen();
+}
 let _editingGoal = false;
 function tasbihStartEditGoal(){
   _editingGoal = true;
@@ -2334,28 +2365,39 @@ function renderTasbih(){
       </div>
     </div>
     ${_tasbihStyleMenuOpen ? `<div class="tasbih-style-backdrop" onclick="closeTasbihStyleMenu()"></div>` : ''}
-    <div class="tasbih-select">
-      ${DHIKR_TYPES.map(dt=>`<button class="chip ${dt===DB.tasbih.selected?'active':''}" onclick="tasbihSelect('${dt}')">${dt}</button>`).join('')}
+    <div style="display:flex; flex-direction:column; min-height:62vh;">
+      <div style="flex:1"></div>
+      <div class="tasbih-phrase-dd">
+        <button class="tasbih-phrase-btn" onclick="toggleTasbihPhraseMenu(event)">
+          <span>${DB.tasbih.selected}</span>
+          ${chevronDownIcon(14)}
+        </button>
+        <div class="tasbih-phrase-menu ${_tasbihPhraseMenuOpen?'open':''}" id="tasbih-phrase-menu">
+          ${DHIKR_TYPES.map(dt=>`<button class="${dt===DB.tasbih.selected?'active':''}" onclick="tasbihSelect('${dt}'); closeTasbihPhraseMenu();">${dt}</button>`).join('')}
+        </div>
+      </div>
+      ${_editingGoal ? `
+      <div class="tasbih-actions">
+        <input id="goal-input" type="number" inputmode="numeric" value="${goal}" min="1"
+          style="flex:1; padding:13px; border-radius:var(--radius-ctrl); border:1px solid var(--green-100); background:var(--surface); font-size:14px; color:var(--text); font-family:inherit; text-align:center;">
+        <button onclick="tasbihSaveGoal()" style="color:var(--green-700); font-weight:700;">${t('save')}</button>
+        <button onclick="tasbihCancelEditGoal()">${t('cancel')}</button>
+      </div>
+      ` : `
+      <div class="tasbih-actions">
+        <button onclick="tasbihResetTap()">${_resetArmed ? t('tap_to_confirm') : t('reset_today')}</button>
+        <button onclick="shareDhikrImage('${DB.tasbih.selected}', '${n} ${t('times_today')}')">${shareIcon(15)} ${t('share')}</button>
+        <button onclick="tasbihStartEditGoal()">${t('edit')}</button>
+      </div>
+      `}
+      <div style="flex:1"></div>
+      <div class="counter-wrap" style="padding-bottom:calc(24px + var(--safe-bottom));">
+        <button class="counter-dial ${style} ${DB.settings.tasbihVibrate ? '' : 'novibrate'}" id="tasbih-dial" onclick="tasbihIncrement()">
+          ${counterInner}
+        </button>
+      </div>
     </div>
-    ${_editingGoal ? `
-    <div class="tasbih-actions">
-      <input id="goal-input" type="number" inputmode="numeric" value="${goal}" min="1"
-        style="flex:1; padding:13px; border-radius:var(--radius-ctrl); border:1px solid var(--green-100); background:var(--surface); font-size:14px; color:var(--text); font-family:inherit; text-align:center;">
-      <button onclick="tasbihSaveGoal()" style="color:var(--green-700); font-weight:700;">${t('save')}</button>
-      <button onclick="tasbihCancelEditGoal()">${t('cancel')}</button>
-    </div>
-    ` : `
-    <div class="tasbih-actions">
-      <button onclick="tasbihResetTap()">${_resetArmed ? t('tap_to_confirm') : t('reset_today')}</button>
-      <button onclick="shareDhikrImage('${DB.tasbih.selected}', '${n} ${t('times_today')}')">${shareIcon(15)} ${t('share')}</button>
-      <button onclick="tasbihStartEditGoal()">${t('edit')}</button>
-    </div>
-    `}
-    <div class="counter-wrap">
-      <button class="counter-dial ${style} ${DB.settings.tasbihVibrate ? '' : 'novibrate'}" id="tasbih-dial" onclick="tasbihIncrement()">
-        ${counterInner}
-      </button>
-    </div>
+    ${_tasbihPhraseMenuOpen ? `<div class="tasbih-style-backdrop" onclick="closeTasbihPhraseMenu()"></div>` : ''}
   `;
 }
 screenRenderers.tasbih = renderTasbih;
