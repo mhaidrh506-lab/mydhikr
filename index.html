@@ -123,6 +123,15 @@ html[data-theme="dark"] .brand-row .word{ color:var(--gold-300); }
 .tab .dot{
   width:22px; height:22px; border-radius:50%;
   display:flex; align-items:center; justify-content:center; font-size:16px;
+  position:relative;
+}
+.tab-badge{
+  position:absolute; top:-4px; left:-6px;
+  min-width:16px; height:16px; padding:0 4px;
+  background:#ef4444; color:#fff;
+  border-radius:999px;
+  font-size:10px; font-weight:800; line-height:16px; text-align:center;
+  box-shadow:0 0 0 2px var(--tabbar-bg);
 }
 .tab.active{color:var(--green-800); font-weight:700; background:var(--gold-100);}
 .tab.active .dot{color:var(--green-800);}
@@ -1617,7 +1626,7 @@ function shellHTML(){
     <div class="tabbar">
       ${TABS.map(tb=>`
         <button class="tab ${DB.ui.tab===tb.id?'active':''}" data-tab="${tb.id}">
-          <span class="dot">${tb.icon}</span>
+          <span class="dot">${tb.icon}${tb.id==='foryou' ? '<span class="tab-badge" id="foryou-tab-badge" style="display:none;">0</span>' : ''}</span>
           <span>${t(tb.labelKey)}</span>
         </button>`).join('')}
     </div>
@@ -1631,6 +1640,7 @@ function renderShell(){
     });
   });
   renderCurrentScreen();
+  updateForYouBadge();
 }
 function renderCurrentScreen(){
   const el = document.getElementById('screens');
@@ -3712,8 +3722,8 @@ async function loadForYouContent(force){
   }
   FORYOU_STATE.loading = false;
   if(DB.ui.tab === 'foryou') renderCurrentScreen();
+  updateForYouBadge();
 }
-async function saveForYouContent(){
   await window.__fbSync.push('foryou_content', { videos: FORYOU_STATE.videos }, true);
 }
 let _foryouMuted = true;
@@ -3797,18 +3807,62 @@ async function foryouToggleLike(vid){
   saveDB();
   FORYOU_STATE.stats[vid] = FORYOU_STATE.stats[vid] || {};
   FORYOU_STATE.stats[vid].likes = (FORYOU_STATE.stats[vid].likes || 0) + (nowLiked ? 1 : -1);
-  renderCurrentScreen();
+
+  // تحديث زر الإعجاب في مكانه فقط بدل إعادة رسم الفيد كامل (اللي كان يرجّع المستخدم لأول فيديو)
+  const item = document.querySelector(`.foryou-item[data-vid="${vid}"]`);
+  if(item){
+    const btn = item.querySelector('.foryou-action-btn');
+    if(btn){
+      btn.classList.toggle('liked', nowLiked);
+      const icon = btn.querySelector('.foryou-action-icon');
+      if(icon) icon.innerHTML = heartIcon(20, nowLiked);
+      const count = btn.querySelector('.foryou-action-count');
+      if(count) count.textContent = foryouFormatCount(FORYOU_STATE.stats[vid].likes);
+    }
+  }
+
   await window.__fbSync.bumpStat('foryou_content', vid, 'likes', nowLiked ? 1 : -1);
 }
 async function foryouRegisterView(vid){
   _foryouViewedThisSession = _foryouViewedThisSession || {};
-  if(_foryouViewedThisSession[vid]) return;
-  _foryouViewedThisSession[vid] = true;
-  FORYOU_STATE.stats[vid] = FORYOU_STATE.stats[vid] || {};
-  FORYOU_STATE.stats[vid].views = (FORYOU_STATE.stats[vid].views || 0) + 1;
-  const counters = document.querySelectorAll(`.foryou-item[data-vid="${vid}"] .foryou-action-btn .foryou-action-count`);
-  if(counters[1]) counters[1].textContent = foryouFormatCount(FORYOU_STATE.stats[vid].views);
-  await window.__fbSync.bumpStat('foryou_content', vid, 'views', 1);
+  if(!_foryouViewedThisSession[vid]){
+    _foryouViewedThisSession[vid] = true;
+    FORYOU_STATE.stats[vid] = FORYOU_STATE.stats[vid] || {};
+    FORYOU_STATE.stats[vid].views = (FORYOU_STATE.stats[vid].views || 0) + 1;
+    const counters = document.querySelectorAll(`.foryou-item[data-vid="${vid}"] .foryou-action-btn .foryou-action-count`);
+    if(counters[1]) counters[1].textContent = foryouFormatCount(FORYOU_STATE.stats[vid].views);
+    await window.__fbSync.bumpStat('foryou_content', vid, 'views', 1);
+  }
+  // تعليم هذا المقطع كـ"مُشاهَد" على هذا الجهاز، لتحديث شارة عدد الفيديوهات الجديدة غير المُشاهَدة
+  DB.foryouSeen = DB.foryouSeen || {};
+  if(!DB.foryouSeen[vid]){
+    DB.foryouSeen[vid] = true;
+    saveDB();
+    updateForYouBadge();
+  }
+}
+function foryouUnseenCount(){
+  DB.foryouSeen = DB.foryouSeen || {};
+  const activeVideos = (FORYOU_STATE.videos || []).filter(v => v.active !== false);
+  let count = 0;
+  activeVideos.forEach((v, i) => {
+    const vid = v.id || ('idx' + i);
+    if(!DB.foryouSeen[vid]) count++;
+  });
+  return count;
+}
+function updateForYouBadge(){
+  const badge = document.getElementById('foryou-tab-badge');
+  if(!badge) return;
+  const n = foryouUnseenCount();
+  if(n > 0){
+    badge.textContent = n > 9 ? '9+' : String(n);
+    badge.style.display = 'flex';
+    badge.style.alignItems = 'center';
+    badge.style.justifyContent = 'center';
+  }else{
+    badge.style.display = 'none';
+  }
 }
 async function foryouDownload(url){
   try{
@@ -4430,6 +4484,7 @@ function bootApp(){
   applyLangDir();
   renderShell();
   applyFontScale();
+  loadForYouContent();
 }
 bootApp();
 setTimeout(()=>{
