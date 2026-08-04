@@ -2,7 +2,7 @@
       "relation": ["delegate_permission/common.handle_all_urls"],
       "target": {
         "namespace": "android_app",
-        "package_name": "app.mydhikr.android",
-        "sha256_cert_fingerprints": ["D6:65:36:E0:F2:DD:69:5A:58:63:D6:8F:2C:A0:25:A6:EC:92:3F:44:0F:D6:46:8D:BA:00:47:FE:2A:7F:A8:28"]
+        "package_name": "app.vercel.mydhikr.twa",
+        "sha256_cert_fingerprints": ["9C:C2:B1:2F:58:1F:E6:7E:DC:68:F9:74:63:5F:82:BE:33:4D:24:E1:87:51:CB:7F:8B:E2:E5:69:1B:67:F6:4E"]
       }
     }]
