@@ -435,6 +435,17 @@ html[data-theme="thikr"] .counter-dial.classic .num{ color:var(--mint); }
 }
 .tasbih-style-menu button.active{background:var(--green-50); color:var(--green-800); font-weight:700;}
 .tasbih-style-backdrop{position:fixed; inset:0; z-index:55;}
+.ayah-bm-menu{
+  position:fixed; z-index:999; background:var(--surface); border:1px solid var(--gold-300);
+  border-radius:12px; box-shadow:var(--shadow-card); padding:4px; animation:bmMenuIn .15s ease;
+}
+.ayah-bm-menu button{
+  display:flex; align-items:center; gap:8px; padding:11px 16px; border:none; background:none;
+  color:var(--text); font-family:inherit; font-size:14px; font-weight:700; cursor:pointer;
+  white-space:nowrap; border-radius:8px;
+}
+.ayah-bm-menu button:active{ background:var(--gold-100); }
+@keyframes bmMenuIn{ from{opacity:0; transform:translateY(4px) scale(.96);} to{opacity:1; transform:translateY(0) scale(1);} }
 html[data-theme="dark"] .tasbih-style-menu{ border-color:rgba(255,255,255,.06); }
 html[data-theme="thikr"] .tasbih-style-menu{ border-color:rgba(255,255,255,.06); }
 html[data-theme="dark"] .tasbih-style-menu button.active{ background:var(--green-100); color:var(--mint); }
@@ -632,20 +643,19 @@ html[data-theme="thikr"] .art-play{ color:var(--mint); }
   background:var(--gold-100); border:1.5px solid var(--gold-500); color:var(--green-800);
   font-family:'Tajawal',sans-serif; font-size:12.5px; font-weight:800;
   align-items:center; justify-content:center; margin:0 5px; vertical-align:middle;
-  box-shadow:0 0 0 2px var(--surface);
+  box-shadow:0 0 0 2px var(--surface); position:relative;
 }
 html[data-theme="dark"] .reader-ayah .num-badge{ background:rgba(201,162,60,.18); border-color:var(--gold-300); }
 html[data-theme="thikr"] .reader-ayah .num-badge{ background:rgba(201,162,60,.18); border-color:var(--gold-300); }
 html[data-theme="dark"] .reader-ayah .ayah-unit.ayah-highlight{ background:rgba(201,162,60,.22); box-shadow:0 0 0 4px rgba(201,162,60,.22); }
 html[data-theme="thikr"] .reader-ayah .ayah-unit.ayah-highlight{ background:rgba(201,162,60,.22); box-shadow:0 0 0 4px rgba(201,162,60,.22); }
-.reader-ayah .bookmark-btn{
-  display:inline-flex; width:26px; height:26px; border-radius:50%;
-  align-items:center; justify-content:center; cursor:pointer; vertical-align:middle;
-  margin:0 2px; color:var(--text-soft);
+.reader-ayah .num-badge .bm-ribbon{
+  position:absolute; top:-9px; right:-5px; width:14px; height:17px;
+  color:var(--gold-600); pointer-events:none; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25));
 }
-.reader-ayah .bookmark-btn.active{ color:var(--gold-600); }
-html[data-theme="dark"] .reader-ayah .bookmark-btn.active{ color:var(--gold-300); }
-html[data-theme="thikr"] .reader-ayah .bookmark-btn.active{ color:var(--gold-300); }
+html[data-theme="dark"] .reader-ayah .num-badge .bm-ribbon{ color:var(--gold-300); }
+html[data-theme="thikr"] .reader-ayah .num-badge .bm-ribbon{ color:var(--gold-300); }
+.reader-ayah .ayah-unit{ cursor:pointer; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:manipulation; }
 .reader-ayah .ayah-unit.ayah-bookmarked{ background:var(--green-50); border-radius:8px; }
 html[data-theme="dark"] .reader-ayah .ayah-unit.ayah-bookmarked{ background:rgba(147,201,166,.10); }
 html[data-theme="thikr"] .reader-ayah .ayah-unit.ayah-bookmarked{ background:rgba(147,201,166,.10); }
@@ -1102,7 +1112,8 @@ const STRINGS = {
   no_results:{ar:'لا توجد نتائج', en:'No results'},
   retry:{ar:'إعادة المحاولة', en:'Retry'},
   continue_reading:{ar:'متابعة القراءة', en:'Continue reading'},
-  bookmark_here:{ar:'ضع علامة هنا', en:'Bookmark this verse'},
+  bookmark_add_here:{ar:'ضع الإشارة المرجعية هنا', en:'Bookmark this verse'},
+  bookmark_remove_here:{ar:'أزل الإشارة المرجعية', en:'Remove bookmark'},
   your_bookmark:{ar:'علامتك المرجعية', en:'Your bookmark'},
   bookmark_added:{ar:'تم حفظ موضعك عند هذه الآية', en:'Bookmarked at this verse'},
   bookmark_removed:{ar:'أُزيلت العلامة المرجعية', en:'Bookmark removed'},
@@ -3465,6 +3476,49 @@ function quranSaveLast(num, ayah){
   DB.quran.lastRead = {surah:num, ayah:ayah||1};
   saveDB();
 }
+let _quranLongPressTimer = null;
+let _quranLongPressFired = false;
+function quranAyahPressStart(num, ayahNum, evt){
+  _quranLongPressFired = false;
+  clearTimeout(_quranLongPressTimer);
+  const targetEl = evt.currentTarget;
+  _quranLongPressTimer = setTimeout(()=>{
+    _quranLongPressFired = true;
+    if(navigator.vibrate) navigator.vibrate(15);
+    quranShowBookmarkMenu(num, ayahNum, targetEl);
+  }, 500);
+}
+function quranAyahPressEnd(){
+  clearTimeout(_quranLongPressTimer);
+}
+function quranHideBookmarkMenu(){
+  const el = document.getElementById('ayah-bm-menu');
+  if(el) el.remove();
+  document.removeEventListener('pointerdown', quranHideBookmarkMenuOutside, true);
+}
+function quranHideBookmarkMenuOutside(e){
+  const menu = document.getElementById('ayah-bm-menu');
+  if(menu && !menu.contains(e.target)) quranHideBookmarkMenu();
+}
+function quranShowBookmarkMenu(num, ayahNum, targetEl){
+  quranHideBookmarkMenu();
+  const bm = DB.quran.bookmark;
+  const isBm = bm && bm.surah===num && bm.ayah===ayahNum;
+  const menu = document.createElement('div');
+  menu.id = 'ayah-bm-menu';
+  menu.className = 'ayah-bm-menu';
+  menu.innerHTML = `<button onclick="quranToggleBookmark(${num},${ayahNum}); quranHideBookmarkMenu();">${bookmarkIcon(16, !isBm)}<span>${isBm ? t('bookmark_remove_here') : t('bookmark_add_here')}</span></button>`;
+  document.body.appendChild(menu);
+  const rect = targetEl.getBoundingClientRect();
+  const menuW = menu.offsetWidth || 200;
+  let left = rect.left + rect.width/2 - menuW/2;
+  left = Math.max(8, Math.min(left, window.innerWidth - menuW - 8));
+  let top = rect.top - menu.offsetHeight - 10;
+  if(top < 8) top = rect.bottom + 10;
+  menu.style.left = left + 'px';
+  menu.style.top = top + 'px';
+  setTimeout(()=>{ document.addEventListener('pointerdown', quranHideBookmarkMenuOutside, true); }, 50);
+}
 function quranToggleBookmark(num, ayahNum){
   const cur = DB.quran.bookmark;
   const isSame = cur && cur.surah===num && cur.ayah===ayahNum;
@@ -3678,7 +3732,11 @@ function loadReaderInto(num){
     const bismillahHtml = s.bismillah ? `<div class="reader-ayah" style="text-align:center; margin-bottom:16px;">${s.bismillah}</div>` : '';
     el.innerHTML = bismillahHtml + `<div class="reader-ayah">${s.ayahs.map((ayahText,i)=>{
       const isBm = bm && bm.surah===num && bm.ayah===(i+1);
-      return `<span class="ayah-unit${isBm?' ayah-bookmarked':''}" id="ayah-${i+1}">${ayahText}<span class="num-badge">${i+1}</span><span class="bookmark-btn${isBm?' active':''}" onclick="quranToggleBookmark(${num},${i+1})" title="${t('bookmark_here')}">${bookmarkIcon(15, isBm)}</span></span>`;
+      return `<span class="ayah-unit${isBm?' ayah-bookmarked':''}" id="ayah-${i+1}"
+        onpointerdown="quranAyahPressStart(${num},${i+1},event)" onpointerup="quranAyahPressEnd()"
+        onpointerleave="quranAyahPressEnd()" onpointercancel="quranAyahPressEnd()"
+        oncontextmenu="return false;"
+        >${ayahText}<span class="num-badge">${i+1}${isBm?'<span class="bm-ribbon">'+bookmarkIcon(14,true)+'</span>':''}</span></span>`;
     }).join(' ')}</div><div style="height:20px"></div>`;
     if(DB.ui.quranTargetAyah){
       const target = DB.ui.quranTargetAyah;
