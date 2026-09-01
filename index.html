@@ -545,10 +545,15 @@ html[data-theme="thikr"] .adhkar-focus-counter .count-big.done{ color:var(--gold
 html[data-theme="dark"] .adhkar-reader-icon-btn{ color:var(--mint); }
 html[data-theme="thikr"] .adhkar-reader-icon-btn{ color:var(--mint); }
 .adhkar-reader-title{font-size:15px; font-weight:700; color:var(--text);}
+.adhkar-reader-stage{
+  display:flex; flex-direction:column; justify-content:center;
+  min-height:calc(100vh - 84px - var(--safe-top) - var(--safe-bottom) - 58px);
+  min-height:calc(100dvh - 84px - var(--safe-top) - var(--safe-bottom) - 58px);
+}
 .adhkar-reader-body{padding:20px 16px 8px;}
 .adhkar-reader-card{
   background:var(--surface); border-radius:18px; padding:28px 22px 22px;
-  box-shadow:var(--shadow-card);
+  box-shadow:var(--shadow-card); will-change:transform, opacity;
 }
 .adhkar-reader-bismillah{
   text-align:center; font-family:'Amiri',serif; font-weight:700; font-size:19px;
@@ -3303,27 +3308,29 @@ function renderAdhkarDetail(){
   const isFav = adhkarIsFav(item.id);
 
   return header + `
-    <div class="adhkar-reader-body">
-      <div class="adhkar-reader-card" onclick="adhkarFocusTap('${cat}')">
-        ${isSurah ? `<div class="adhkar-reader-bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>` : ''}
-        <div class="adhkar-reader-text">${item.text}</div>
-        ${citation ? `<div class="adhkar-reader-citation">(${citation})</div>` : ''}
-        <div class="adhkar-reader-divider"></div>
-        <div class="adhkar-reader-reps">${adhkarRepsLabel(item.reps)}</div>
-        ${item.note ? `<div class="adhkar-reader-note">${item.note}</div>` : ''}
+    <div class="adhkar-reader-stage">
+      <div class="adhkar-reader-body">
+        <div class="adhkar-reader-card" onclick="adhkarFocusTap('${cat}')">
+          ${isSurah ? `<div class="adhkar-reader-bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>` : ''}
+          <div class="adhkar-reader-text">${item.text}</div>
+          ${citation ? `<div class="adhkar-reader-citation">(${citation})</div>` : ''}
+          <div class="adhkar-reader-divider"></div>
+          <div class="adhkar-reader-reps">${adhkarRepsLabel(item.reps)}</div>
+          ${item.note ? `<div class="adhkar-reader-note">${item.note}</div>` : ''}
+        </div>
       </div>
-    </div>
-    <div class="adhkar-reader-toolbar">
-      <div class="art-side">
-        <button class="art-btn" onclick="adhkarShareCurrent()" aria-label="share">${shareUpIcon(18)}</button>
-        <button class="art-btn art-play" onclick="adhkarTogglePlay()" aria-label="play">${_adhkarSpeaking ? pauseFilledIcon(18) : playFilledIcon(18)}</button>
-        <button class="art-btn art-speed" onclick="adhkarCycleSpeed()" aria-label="speed">${_adhkarSpeed}x</button>
-      </div>
-      <button class="art-counter ${remaining===0?'done':''}" onclick="adhkarFocusTap('${cat}')" aria-label="count">${remaining}</button>
-      <div class="art-side">
-        <button class="art-btn" onclick="adhkarFocusReset('${cat}')" aria-label="reset">${resetIcon(17)}</button>
-        <button class="art-btn ${isFav?'active':''}" onclick="adhkarToggleFav('${item.id}')" aria-label="favorite">${favIcon(18, isFav)}</button>
-        <div class="art-progress">${idx+1}/${items.length}</div>
+      <div class="adhkar-reader-toolbar">
+        <div class="art-side">
+          <button class="art-btn" onclick="adhkarShareCurrent()" aria-label="share">${shareUpIcon(18)}</button>
+          <button class="art-btn art-play" onclick="adhkarTogglePlay()" aria-label="play">${_adhkarSpeaking ? pauseFilledIcon(18) : playFilledIcon(18)}</button>
+          <button class="art-btn art-speed" onclick="adhkarCycleSpeed()" aria-label="speed">${_adhkarSpeed}x</button>
+        </div>
+        <button class="art-counter ${remaining===0?'done':''}" onclick="adhkarFocusTap('${cat}')" aria-label="count">${remaining}</button>
+        <div class="art-side">
+          <button class="art-btn" onclick="adhkarFocusReset('${cat}')" aria-label="reset">${resetIcon(17)}</button>
+          <button class="art-btn ${isFav?'active':''}" onclick="adhkarToggleFav('${item.id}')" aria-label="favorite">${favIcon(18, isFav)}</button>
+          <div class="art-progress">${idx+1}/${items.length}</div>
+        </div>
       </div>
     </div>
   `;
@@ -3408,20 +3415,71 @@ function adhkarBackToGrid(){
   saveDB();
   renderCurrentScreen();
 }
+let _adhkarDragStartX = null;
+let _adhkarDragStartY = null;
+let _adhkarDragLocked = null; // true = horizontal swipe, false = vertical scroll, null = undecided
 function after_adhkar(){
   const card = document.querySelector('.adhkar-reader-card');
   if(!card) return;
-  let startX = null;
-  card.addEventListener('touchstart', (e)=>{ startX = e.touches[0].clientX; }, {passive:true});
+  card.style.transform = '';
+  card.style.opacity = '';
+  card.style.transition = '';
+  card.addEventListener('touchstart', (e)=>{
+    _adhkarDragStartX = e.touches[0].clientX;
+    _adhkarDragStartY = e.touches[0].clientY;
+    _adhkarDragLocked = null;
+    card.style.transition = 'none';
+  }, {passive:true});
+  card.addEventListener('touchmove', (e)=>{
+    if(_adhkarDragStartX === null) return;
+    const dx = e.touches[0].clientX - _adhkarDragStartX;
+    const dy = e.touches[0].clientY - _adhkarDragStartY;
+    if(_adhkarDragLocked === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)){
+      _adhkarDragLocked = Math.abs(dx) > Math.abs(dy);
+    }
+    if(_adhkarDragLocked){
+      if(e.cancelable) e.preventDefault();
+      card.style.transform = `translateX(${dx}px)`;
+      card.style.opacity = String(Math.max(1 - Math.abs(dx)/280, 0.35));
+    }
+  }, {passive:false});
   card.addEventListener('touchend', (e)=>{
-    if(startX === null) return;
-    const dx = e.changedTouches[0].clientX - startX;
-    startX = null;
-    if(Math.abs(dx) < 45) return;
+    if(_adhkarDragStartX === null) return;
+    const dx = e.changedTouches[0].clientX - _adhkarDragStartX;
+    const wasHorizontal = _adhkarDragLocked;
+    _adhkarDragStartX = null; _adhkarDragStartY = null; _adhkarDragLocked = null;
+    if(!wasHorizontal){ card.style.transition=''; card.style.transform=''; card.style.opacity=''; return; }
     const cat = DB.ui.adhkarCat;
-    if(!cat || !ADHKAR_DATA[cat]) return;
-    if(dx < 0) adhkarFocusNext(cat);
-    else adhkarFocusPrev();
+    const items = cat && ADHKAR_DATA[cat];
+    card.style.transition = 'transform .25s ease, opacity .25s ease';
+    if(Math.abs(dx) >= 55 && items){
+      const goingNext = dx > 0; // swipe left-to-right => next
+      const canMove = goingNext ? (_adhkarIndex < items.length-1) : (_adhkarIndex > 0);
+      if(canMove){
+        const vw = window.innerWidth || 400;
+        card.style.transform = `translateX(${dx > 0 ? vw : -vw}px)`;
+        card.style.opacity = '0';
+        setTimeout(()=>{
+          if(goingNext) adhkarFocusNext(cat); else adhkarFocusPrev();
+          requestAnimationFrame(()=>{
+            const newCard = document.querySelector('.adhkar-reader-card');
+            if(newCard){
+              newCard.style.transition = 'none';
+              newCard.style.transform = `translateX(${dx > 0 ? -vw*0.35 : vw*0.35}px)`;
+              newCard.style.opacity = '0';
+              requestAnimationFrame(()=>{
+                newCard.style.transition = 'transform .25s ease, opacity .25s ease';
+                newCard.style.transform = 'translateX(0)';
+                newCard.style.opacity = '1';
+              });
+            }
+          });
+        }, 200);
+        return;
+      }
+    }
+    card.style.transform = 'translateX(0)';
+    card.style.opacity = '1';
   }, {passive:true});
 }
 if(!DB.ui.adhkarView) DB.ui.adhkarView = 'grid';
