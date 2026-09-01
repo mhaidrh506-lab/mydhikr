@@ -3676,9 +3676,9 @@ function loadReaderInto(num){
     quranSaveLast(num, DB.quran.lastRead && DB.quran.lastRead.surah===num ? DB.quran.lastRead.ayah : 1);
     const bm = DB.quran.bookmark;
     const bismillahHtml = s.bismillah ? `<div class="reader-ayah" style="text-align:center; margin-bottom:16px;">${s.bismillah}</div>` : '';
-    el.innerHTML = bismillahHtml + `<div class="reader-ayah">${s.ayahs.map((t,i)=>{
+    el.innerHTML = bismillahHtml + `<div class="reader-ayah">${s.ayahs.map((ayahText,i)=>{
       const isBm = bm && bm.surah===num && bm.ayah===(i+1);
-      return `<span class="ayah-unit${isBm?' ayah-bookmarked':''}" id="ayah-${i+1}">${t}<span class="num-badge">${i+1}</span><span class="bookmark-btn${isBm?' active':''}" onclick="quranToggleBookmark(${num},${i+1})" title="${t('bookmark_here')}">${bookmarkIcon(15, isBm)}</span></span>`;
+      return `<span class="ayah-unit${isBm?' ayah-bookmarked':''}" id="ayah-${i+1}">${ayahText}<span class="num-badge">${i+1}</span><span class="bookmark-btn${isBm?' active':''}" onclick="quranToggleBookmark(${num},${i+1})" title="${t('bookmark_here')}">${bookmarkIcon(15, isBm)}</span></span>`;
     }).join(' ')}</div><div style="height:20px"></div>`;
     if(DB.ui.quranTargetAyah){
       const target = DB.ui.quranTargetAyah;
