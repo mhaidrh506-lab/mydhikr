@@ -648,41 +648,57 @@ html[data-theme="thikr"] .art-play{ color:var(--mint); }
 }
 .page-grid-btn:active{ background:var(--green-100); }
 .reader-ayah{font-family:'Amiri',serif; font-size:22px; line-height:2.3; padding:0 16px; text-align:justify; text-align-last:center;}
+.mushaf-reader-root{
+  --mr-bg:#F7F1E3; --mr-text:#1E1B14; --mr-topbar-bg:#FBF8F2; --mr-topbar-border:#E6DCC6;
+  --mr-accent:#7A5C2E; --mr-btn-bg:#EDE4CF; --mr-muted-text:#4A3B22; --mr-timer-text:#9c8a63;
+  --mr-gold-border:#C9A961; --mr-surah-text:#6B4F21; --mr-pill-bg:#EFE6D0;
+  --mr-banner-bg1:#F3E9D0; --mr-banner-bg2:#EADFC0; --mr-banner-inner:#F7F1E3; --mr-banner-text:#5C4218;
+  --mr-rosette:#A8791E; --mr-marker-ring:#B08D3F; --mr-highlight-bg:#F0DFAE;
+  --mr-bookmark-glow:rgba(168,121,30,.5); --mr-modal-bg:#FBF8F2; --mr-go-btn-bg:#6B4F21; --mr-go-btn-text:#fff;
+}
+.mushaf-reader-root.dark{
+  --mr-bg:#17140E; --mr-text:#EDE6D4; --mr-topbar-bg:#1F1B13; --mr-topbar-border:#3A331F;
+  --mr-accent:#C9A961; --mr-btn-bg:#2A2418; --mr-muted-text:#C7BFA6; --mr-timer-text:#8B7F63;
+  --mr-gold-border:#8A6E32; --mr-surah-text:#D9BE7E; --mr-pill-bg:#241F14;
+  --mr-banner-bg1:#2A2415; --mr-banner-bg2:#201C10; --mr-banner-inner:#17140E; --mr-banner-text:#E8D6A8;
+  --mr-rosette:#C9A961; --mr-marker-ring:#A8863E; --mr-highlight-bg:rgba(201,169,97,.28);
+  --mr-bookmark-glow:rgba(201,169,97,.6); --mr-modal-bg:#221D14; --mr-go-btn-bg:#C9A961; --mr-go-btn-text:#1E1B14;
+}
 .mushaf-line{
   font-family:'Amiri',serif; line-height:2.1; padding:0 6px; margin:0;
-  text-align:justify; text-align-last:right; color:#1E1B14;
+  text-align:justify; text-align-last:right; color:var(--mr-text);
   font-size:calc(21px * var(--mushaf-scale, 1));
 }
 .mushaf-topbar{
   display:flex; align-items:center; gap:7px; padding:calc(10px + var(--safe-top)) 14px 8px;
-  background:#FBF8F2; border-bottom:1px solid #E6DCC6; position:relative;
+  background:var(--mr-topbar-bg); border-bottom:1px solid var(--mr-topbar-border); position:relative;
 }
-.mushaf-back-btn{ background:none; border:none; font-size:22px; color:#7A5C2E; cursor:pointer; padding:2px 6px; line-height:1; }
-.mushaf-audio-btn{ background:#EDE4CF; border:none; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; color:#7A5C2E; cursor:pointer; flex-shrink:0; }
-.mushaf-reciter-select{ flex:1; min-width:0; border:none; background:transparent; font-size:12px; color:#4A3B22; font-family:inherit; }
-.mushaf-fontsize-btn{ background:#EDE4CF; border:none; border-radius:8px; width:28px; height:28px; font-size:11px; font-weight:700; color:#7A5C2E; cursor:pointer; flex-shrink:0; }
-.mushaf-timer-label{ font-size:10px; color:#9c8a63; position:absolute; top:100%; left:14px; }
+.mushaf-back-btn{ background:none; border:none; font-size:22px; color:var(--mr-accent); cursor:pointer; padding:2px 6px; line-height:1; }
+.mushaf-audio-btn{ background:var(--mr-btn-bg); border:none; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; color:var(--mr-accent); cursor:pointer; flex-shrink:0; }
+.mushaf-reciter-select{ flex:1; min-width:0; border:none; background:transparent; font-size:12px; color:var(--mr-muted-text); font-family:inherit; }
+.mushaf-fontsize-btn{ background:var(--mr-btn-bg); border:none; border-radius:8px; width:28px; height:28px; font-size:11px; font-weight:700; color:var(--mr-accent); cursor:pointer; flex-shrink:0; }
+.mushaf-timer-label{ font-size:10px; color:var(--mr-timer-text); position:absolute; top:100%; left:14px; }
 .mushaf-infobar{
   display:flex; align-items:center; justify-content:space-between; gap:8px;
-  padding:9px 14px; background:#FBF8F2; border-bottom:1.5px solid #C9A961;
+  padding:9px 14px; background:var(--mr-topbar-bg); border-bottom:1.5px solid var(--mr-gold-border);
 }
-.mushaf-surah-tap{ display:flex; align-items:center; gap:6px; color:#6B4F21; font-family:'Amiri',serif; font-weight:700; font-size:14.5px; cursor:pointer; }
-.mushaf-page-pill{ background:#EFE6D0; border:1px solid #C9A961; border-radius:16px; padding:4px 16px; font-family:'Amiri',serif; font-weight:700; font-size:13px; color:#6B4F21; cursor:pointer; }
-.mushaf-juz-label{ font-family:'Amiri',serif; font-weight:700; font-size:13.5px; color:#6B4F21; }
+.mushaf-surah-tap{ display:flex; align-items:center; gap:6px; color:var(--mr-surah-text); font-family:'Amiri',serif; font-weight:700; font-size:14.5px; cursor:pointer; }
+.mushaf-page-pill{ background:var(--mr-pill-bg); border:1px solid var(--mr-gold-border); border-radius:16px; padding:4px 16px; font-family:'Amiri',serif; font-weight:700; font-size:13px; color:var(--mr-surah-text); cursor:pointer; }
+.mushaf-juz-label{ font-family:'Amiri',serif; font-weight:700; font-size:13.5px; color:var(--mr-surah-text); }
 .mushaf-scroll{
   overflow-y:auto; -webkit-overflow-scrolling:touch;
-  background:#F7F1E3; color:#1E1B14;
+  background:var(--mr-bg); color:var(--mr-text);
   height:calc(100dvh - 97px - var(--safe-top) - 84px - var(--safe-bottom));
   padding:8px 18px 40px;
 }
 .mushaf-surah-banner{
   display:flex; align-items:center; justify-content:center; gap:12px;
-  margin:24px 0 18px; padding:12px 16px; border:2px solid #C9A961; border-radius:8px;
-  background:linear-gradient(180deg, #F3E9D0, #EADFC0);
-  box-shadow:inset 0 0 0 3px #F7F1E3, inset 0 0 0 4px #C9A961;
-  font-family:'Amiri',serif; font-weight:700; font-size:19px; color:#5C4218;
+  margin:24px 0 18px; padding:12px 16px; border:2px solid var(--mr-gold-border); border-radius:8px;
+  background:linear-gradient(180deg, var(--mr-banner-bg1), var(--mr-banner-bg2));
+  box-shadow:inset 0 0 0 3px var(--mr-banner-inner), inset 0 0 0 4px var(--mr-gold-border);
+  font-family:'Amiri',serif; font-weight:700; font-size:19px; color:var(--mr-banner-text);
 }
-.mushaf-surah-banner .banner-rosette{ color:#A8791E; flex-shrink:0; width:22px; height:22px; display:inline-flex; position:relative; }
+.mushaf-surah-banner .banner-rosette{ color:var(--mr-rosette); flex-shrink:0; width:22px; height:22px; display:inline-flex; position:relative; }
 .mushaf-surah-banner .banner-rosette svg{ width:100%; height:100%; }
 .num-badge{
   display:inline-flex; width:calc(23px * var(--mushaf-scale, 1)); height:calc(23px * var(--mushaf-scale, 1)); margin:0 3px; vertical-align:middle;
@@ -698,17 +714,19 @@ html[data-theme="thikr"] .art-play{ color:var(--mint); }
   position:absolute; top:-9px; right:-5px; width:14px; height:17px;
   pointer-events:none; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25));
 }
-.mushaf-scroll .num-badge{ color:#6B4F21; }
-.mushaf-scroll .num-badge .medallion-bg{ color:#B08D3F; }
-.mushaf-scroll .num-badge.ayah-highlight{ background:#F0DFAE; border-radius:50%; box-shadow:0 0 0 4px #F0DFAE; }
-.mushaf-scroll .num-badge .bm-ribbon{ color:#A8791E; }
-.mushaf-scroll .num-badge.ayah-bookmarked .medallion-bg{ color:#A8791E; filter:drop-shadow(0 0 3px rgba(168,121,30,.5)); }
+.mushaf-scroll .num-badge{ color:var(--mr-surah-text); }
+.mushaf-scroll .num-badge .medallion-bg{ color:var(--mr-marker-ring); }
+.mushaf-scroll .num-badge.ayah-highlight{ background:var(--mr-highlight-bg); border-radius:50%; box-shadow:0 0 0 4px var(--mr-highlight-bg); }
+.mushaf-scroll .num-badge .bm-ribbon{ color:var(--mr-rosette); }
+.mushaf-scroll .num-badge.ayah-bookmarked .medallion-bg{ color:var(--mr-rosette); filter:drop-shadow(0 0 3px var(--mr-bookmark-glow)); }
 .page-jump-modal{ position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:200; display:flex; align-items:center; justify-content:center; }
-.page-jump-box{ background:#FBF8F2; border-radius:16px; padding:20px; width:240px; box-shadow:0 10px 30px rgba(0,0,0,.3); }
-.page-jump-title{ font-size:13px; color:#6B4F21; margin-bottom:10px; text-align:center; }
+.page-jump-box{ background:var(--mr-modal-bg); border-radius:16px; padding:20px; width:240px; box-shadow:0 10px 30px rgba(0,0,0,.3); }
+.page-jump-title{ font-size:13px; color:var(--mr-surah-text); margin-bottom:10px; text-align:center; }
 .page-jump-row{ display:flex; gap:8px; }
-.page-jump-row input{ flex:1; min-width:0; border:1px solid #C9A961; border-radius:10px; padding:10px; font-size:15px; text-align:center; font-family:inherit; }
-.page-jump-row button{ background:#6B4F21; color:#fff; border:none; border-radius:10px; padding:0 16px; font-weight:700; font-family:inherit; cursor:pointer; }
+.page-jump-row input{ flex:1; min-width:0; border:1px solid var(--mr-gold-border); border-radius:10px; padding:10px; font-size:15px; text-align:center; font-family:inherit; background:var(--mr-bg); color:var(--mr-text); }
+.page-jump-row button{ background:var(--mr-go-btn-bg); color:var(--mr-go-btn-text); border:none; border-radius:10px; padding:0 16px; font-weight:700; font-family:inherit; cursor:pointer; }
+.mushaf-theme-btn{ background:var(--mr-btn-bg); border:none; border-radius:8px; width:28px; height:28px; display:flex; align-items:center; justify-content:center; color:var(--mr-accent); cursor:pointer; flex-shrink:0; }
+
 
 /* ---------- settings ---------- */
 .toggle-row{display:flex; align-items:center; justify-content:space-between; padding:14px 0;}
@@ -1104,6 +1122,7 @@ if(!Array.isArray(DB.quran.bookmarks)){
 if(DB.quran.lastAyahMark === undefined) DB.quran.lastAyahMark = null;
 if(!DB.quran.khatmaMaxPage) DB.quran.khatmaMaxPage = 0;
 if(!DB.settings.quranTextScale) DB.settings.quranTextScale = 1;
+if(!DB.settings.quranReaderTheme) DB.settings.quranReaderTheme = 'light';
 const ADHKAR_DATA_VERSION = 2;
 if(DB.adhkarDataVersion !== ADHKAR_DATA_VERSION){
   if(!DB.adhkar) DB.adhkar = { progress:{} };
@@ -3981,13 +4000,16 @@ function renderQuranReader(){
   const isPlayingThis = !!(audio && audio.dataset.surah === String(audioSurahNum) && !audio.paused);
   const juz = juzForAyah(p.startSurah, p.startAyah);
   const isBm = quranIsBookmarked(p.startSurah, p.startAyah);
+  const isDark = DB.settings.quranReaderTheme === 'dark';
   return `
+    <div class="mushaf-reader-root${isDark?' dark':''}" id="mushaf-reader-root">
     <div class="mushaf-topbar">
       <button class="mushaf-back-btn" onclick="quranBack()">›</button>
       <button id="quran-audio-play-btn" class="mushaf-audio-btn" onclick="quranAudioToggle(${audioSurahNum})">${isPlayingThis ? stopIcon(16) : speakerIcon(17)}</button>
       <select class="mushaf-reciter-select" onchange="quranReciterSet(this.value)">
         ${RECITERS.map(r=>`<option value="${r.id}" ${DB.settings.quranReciter===r.id?'selected':''}>${r.name}</option>`).join('')}
       </select>
+      <button class="mushaf-theme-btn" id="mushaf-theme-btn" onclick="quranToggleReaderTheme()">${isDark ? sunIcon(15) : moonIcon(15)}</button>
       <button class="mushaf-fontsize-btn" onclick="quranAdjustTextScale(-1)">A-</button>
       <button class="mushaf-fontsize-btn" onclick="quranAdjustTextScale(1)">A+</button>
       <button class="mushaf-audio-btn" onclick="quranShowTimerMenu(event)" title="${t('no_timer')}">${clockIcon ? clockIcon(16) : '⏱'}</button>
@@ -4003,6 +4025,7 @@ function renderQuranReader(){
     </div>
     <div id="mushaf-scroll" class="mushaf-scroll">
       <div class="empty">${t('loading')}</div>
+    </div>
     </div>
   `;
 }
@@ -4290,6 +4313,15 @@ function quranAdjustTextScale(delta){
     scrollEl.style.setProperty('--mushaf-scale', DB.settings.quranTextScale);
     requestAnimationFrame(()=>fitMushafLines(scrollEl));
   }
+}
+function quranToggleReaderTheme(){
+  DB.settings.quranReaderTheme = DB.settings.quranReaderTheme === 'dark' ? 'light' : 'dark';
+  saveDB();
+  const root = document.getElementById('mushaf-reader-root');
+  const isDark = DB.settings.quranReaderTheme === 'dark';
+  if(root) root.classList.toggle('dark', isDark);
+  const btn = document.getElementById('mushaf-theme-btn');
+  if(btn) btn.innerHTML = isDark ? sunIcon(15) : moonIcon(15);
 }
 function quranShowPageJump(){
   quranHideBookmarkMenu();
