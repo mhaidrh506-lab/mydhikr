@@ -4023,14 +4023,21 @@ function toArabicDigits(n){
 function fitMushafLines(container){
   const els = container.querySelectorAll('.mushaf-line');
   els.forEach(el=>{
+    if(el.style.textAlign === 'center') return;
     el.style.fontSize = '';
+    el.style.textAlignLast = '';
     const containerWidth = el.clientWidth;
     const naturalWidth = el.scrollWidth;
-    if(containerWidth > 0 && naturalWidth > containerWidth){
+    if(containerWidth <= 0) return;
+    if(naturalWidth > containerWidth){
       const baseSize = parseFloat(getComputedStyle(el).fontSize);
       const scale = (containerWidth / naturalWidth) * 0.97;
       const newSize = Math.max(10, baseSize * scale);
       el.style.fontSize = newSize + 'px';
+      el.style.textAlignLast = 'justify';
+    }else{
+      const ratio = naturalWidth / containerWidth;
+      el.style.textAlignLast = ratio >= 0.82 ? 'justify' : 'right';
     }
   });
 }
