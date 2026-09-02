@@ -677,12 +677,14 @@ html[data-theme="thikr"] .art-play{ color:var(--mint); }
   padding:8px 18px 40px;
 }
 .mushaf-surah-banner{
-  display:flex; align-items:center; justify-content:center; gap:10px;
-  margin:22px 0 16px; padding:10px 16px; border:1.5px solid #C9A961; border-radius:6px;
+  display:flex; align-items:center; justify-content:center; gap:12px;
+  margin:24px 0 18px; padding:12px 16px; border:2px solid #C9A961; border-radius:8px;
   background:linear-gradient(180deg, #F3E9D0, #EADFC0);
-  font-family:'Amiri',serif; font-weight:700; font-size:18px; color:#5C4218;
+  box-shadow:inset 0 0 0 3px #F7F1E3, inset 0 0 0 4px #C9A961;
+  font-family:'Amiri',serif; font-weight:700; font-size:19px; color:#5C4218;
 }
-.mushaf-surah-banner .flourish{ color:#B08D3F; opacity:.8; flex-shrink:0; }
+.mushaf-surah-banner .banner-rosette{ color:#A8791E; flex-shrink:0; width:22px; height:22px; display:inline-flex; position:relative; }
+.mushaf-surah-banner .banner-rosette svg{ width:100%; height:100%; }
 .num-badge{
   display:inline-flex; width:1.55em; height:1.55em; margin:0 .15em; vertical-align:middle;
   align-items:center; justify-content:center; position:relative; cursor:pointer;
@@ -2938,11 +2940,16 @@ function flourishSVG(size){
 }
 function ayahMedallionSVG(){
   return `<svg class="medallion-bg" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <g fill="none" stroke="currentColor" stroke-width="1.3">
-      <circle cx="16" cy="16" r="14"/>
-      <circle cx="16" cy="16" r="10.5"/>
-      <path d="M16 2 L18 6 L16 10 L14 6 Z M16 30 L18 26 L16 22 L14 26 Z M2 16 L6 14 L10 16 L6 18 Z M30 16 L26 14 L22 16 L26 18 Z
-                M5.5 5.5 L9 7.5 L9 11 L5.5 9 Z M26.5 5.5 L23 7.5 L23 11 L26.5 9 Z M5.5 26.5 L9 24.5 L9 21 L5.5 23 Z M26.5 26.5 L23 24.5 L23 21 L26.5 23 Z" fill="currentColor" stroke="none" opacity=".55"/>
+    <circle cx="16" cy="16" r="11.5" fill="none" stroke="currentColor" stroke-width="1.6"/>
+    <g fill="currentColor" stroke="none">
+      <path d="M16 2.5 L18.8 8 L13.2 8 Z"/>
+      <path d="M16 29.5 L18.8 24 L13.2 24 Z"/>
+      <path d="M2.5 16 L8 13.2 L8 18.8 Z"/>
+      <path d="M29.5 16 L24 13.2 L24 18.8 Z"/>
+      <path d="M6.2 6.2 L11.6 8.4 L8.4 11.6 Z"/>
+      <path d="M25.8 6.2 L20.4 8.4 L23.6 11.6 Z"/>
+      <path d="M6.2 25.8 L11.6 23.6 L8.4 20.4 Z"/>
+      <path d="M25.8 25.8 L20.4 23.6 L23.6 20.4 Z"/>
     </g>
   </svg>`;
 }
@@ -3879,12 +3886,19 @@ function quranJuzListHTML(){
   }).join('');
 }
 function quranPagesGridHTML(){
-  let html = '<div class="pages-grid">';
+  let html = '';
   for(let pg=1; pg<=604; pg++){
-    html += `<button class="page-grid-btn" onclick="quranOpen2Page(${pg})">${toArabicDigits(pg)}</button>`;
+    const p = mushafPageInfo(pg);
+    const meta = SURAHS.find(x=>x[0]===p.startSurah);
+    html += `<div class="surah-row" onclick="quranOpen2Page(${pg})" style="cursor:pointer;">
+      <div class="surah-num">${toArabicDigits(pg)}</div>
+      <div class="surah-info">
+        <div class="name">${isEn()?'Page ':'صفحة '}${toArabicDigits(pg)}</div>
+        <div class="meta">${isEn()?'Surah ':'سورة '}${meta?meta[1]:p.startSurah}</div>
+      </div>
+    </div>`;
   }
-  html += '</div>';
-  return html;
+  return html || `<div class="empty">${t('no_results')}</div>`;
 }
 function quranOpen2Page(pageNum){
   DB.ui.quranView = 'reader';
@@ -3954,9 +3968,9 @@ function renderQuranList(){
       <span class="ic">${searchIcon(18)}</span>
     </div>
     <div style="display:flex; gap:8px; padding:0 16px 10px;">
-      <button onclick="quranSetListTab('pages')" style="flex:1; padding:9px; border-radius:16px; border:1px solid var(--green-100); background:${tab==='pages'?'var(--green-700)':'transparent'}; color:${tab==='pages'?'#fff':'var(--text)'}; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer;">${isEn()?'Pages':'الصفحات'}</button>
-      <button onclick="quranSetListTab('juz')" style="flex:1; padding:9px; border-radius:16px; border:1px solid var(--green-100); background:${tab==='juz'?'var(--green-700)':'transparent'}; color:${tab==='juz'?'#fff':'var(--text)'}; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer;">${isEn()?'Juz':'الأجزاء'}</button>
       <button onclick="quranSetListTab('surahs')" style="flex:1; padding:9px; border-radius:16px; border:1px solid var(--green-100); background:${tab==='surahs'?'var(--green-700)':'transparent'}; color:${tab==='surahs'?'#fff':'var(--text)'}; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer;">${isEn()?'Surahs':'السور'}</button>
+      <button onclick="quranSetListTab('juz')" style="flex:1; padding:9px; border-radius:16px; border:1px solid var(--green-100); background:${tab==='juz'?'var(--green-700)':'transparent'}; color:${tab==='juz'?'#fff':'var(--text)'}; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer;">${isEn()?'Juz':'الأجزاء'}</button>
+      <button onclick="quranSetListTab('pages')" style="flex:1; padding:9px; border-radius:16px; border:1px solid var(--green-100); background:${tab==='pages'?'var(--green-700)':'transparent'}; color:${tab==='pages'?'#fff':'var(--text)'}; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer;">${isEn()?'Pages':'الصفحات'}</button>
     </div>
     <div style="padding-bottom:6px" id="surah-list">
       ${tab==='pages' ? quranPagesGridHTML() : tab==='juz' ? quranJuzListHTML() : quranRowsHTML(filtered)}
@@ -4077,7 +4091,7 @@ async function quranRenderPageHTML(pageNum){
     if(entry[0]==='h'){
       currentSurah = parseInt(entry[1], 10);
       const meta = SURAHS.find(x=>x[0]===currentSurah);
-      html += `<div class="mushaf-surah-banner"><span class="flourish">${flourishSVG(14)}</span><span>${isEn()?'Surah':'سورة'} ${meta ? meta[1] : currentSurah}</span><span class="flourish">${flourishSVG(14)}</span></div>`;
+      html += `<div class="mushaf-surah-banner"><span class="banner-rosette">${ayahMedallionSVG()}</span><span>${isEn()?'Surah':'سورة'} ${meta ? meta[1] : currentSurah}</span><span class="banner-rosette">${ayahMedallionSVG()}</span></div>`;
     }else if(entry[0]==='b'){
       const bism = bismillahMap[currentSurah];
       if(bism) html += `<div class="mushaf-line" style="text-align:center; text-align-last:center;">${bism}</div>`;
