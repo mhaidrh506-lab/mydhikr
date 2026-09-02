@@ -641,7 +641,10 @@ html[data-theme="thikr"] .art-play{ color:var(--mint); }
 .surah-info .name{font-size:15px; font-weight:700;}
 .surah-info .meta{font-size:12px; color:var(--text-muted); margin-top:1px;}
 .reader-ayah{font-family:'Amiri',serif; font-size:22px; line-height:2.3; padding:0 16px; text-align:justify; text-align-last:center;}
-.reader-ayah .ayah-unit{transition:background .5s ease, border-radius .5s ease;}
+.mushaf-line{
+  font-family:'Amiri',serif; font-size:21px; line-height:2.05; padding:0 6px; margin:0;
+  text-align:justify; text-align-last:justify;
+}
 .mushaf-frame{
   margin:14px 16px 18px; position:relative; border:2px solid var(--gold-500);
   border-radius:4px; padding:22px 14px 26px;
@@ -664,49 +667,49 @@ html[data-theme="thikr"] .art-play{ color:var(--mint); }
   padding:7px 12px; font-family:'Amiri',serif; font-size:13.5px; font-weight:700; color:var(--green-800);
   min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
-html[data-theme="dark"] .mushaf-cartouche, html[data-theme="thikr"] .mushaf-cartouche{ color:var(--gold-300); }
-.mushaf-cartouche .flourish{ flex-shrink:0; opacity:.7; }
-.reader-ayah .ayah-unit .num-badge{ position:relative; }
-.reader-ayah .num-badge{
-  display:inline-flex; width:32px; height:32px; margin:0 4px; vertical-align:middle;
-  align-items:center; justify-content:center; position:relative;
-  color:var(--green-800); font-family:'Tajawal',sans-serif; font-size:12px; font-weight:800;
-  background:none; border:none; box-shadow:none;
+html[data-theme="dark"] .mushaf-cartouche, html[data-theme="thikr"] .mushaf-cartouche{
+  background:linear-gradient(135deg, #142642, #1f3c68);
+  border-color:#5580bf; color:#E7EDF6;
+  box-shadow:0 0 12px rgba(85,128,191,.30), inset 0 1px 0 rgba(255,255,255,.06);
 }
-.reader-ayah .num-badge .medallion-bg{ position:absolute; inset:0; width:100%; height:100%; color:var(--gold-500); z-index:0; }
-.reader-ayah .num-badge span.medallion-num{ position:relative; z-index:1; }
-html[data-theme="dark"] .reader-ayah .num-badge, html[data-theme="thikr"] .reader-ayah .num-badge{ color:var(--mint); }
-html[data-theme="dark"] .reader-ayah .num-badge .medallion-bg, html[data-theme="thikr"] .reader-ayah .num-badge .medallion-bg{ color:var(--gold-300); }
+html[data-theme="dark"] .mushaf-cartouche .flourish, html[data-theme="thikr"] .mushaf-cartouche .flourish{ color:#9EB8DE; opacity:.9; }
+.mushaf-cartouche .flourish{ flex-shrink:0; opacity:.7; }
+.num-badge{
+  display:inline-flex; width:30px; height:30px; margin:0 3px; vertical-align:middle;
+  align-items:center; justify-content:center; position:relative; cursor:pointer;
+  color:var(--green-800); font-family:'Tajawal',sans-serif; font-size:11.5px; font-weight:800;
+  background:none; border:none; box-shadow:none;
+  -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:manipulation;
+  transition:background .5s ease, border-radius .5s ease;
+}
+.num-badge .medallion-bg{ position:absolute; inset:0; width:100%; height:100%; color:var(--gold-500); z-index:0; }
+.num-badge span.medallion-num{ position:relative; z-index:1; }
+html[data-theme="dark"] .num-badge, html[data-theme="thikr"] .num-badge{ color:#E7EDF6; }
+html[data-theme="dark"] .num-badge .medallion-bg, html[data-theme="thikr"] .num-badge .medallion-bg{ color:#5580bf; }
 .mushaf-page-nav{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:6px 16px 22px; }
 .mushaf-page-nav button{ background:var(--gold-100); border:1px solid var(--gold-500); color:var(--green-800); border-radius:20px; padding:9px 16px; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; }
 .mushaf-page-nav button:disabled{ opacity:.35; cursor:default; }
-html[data-theme="dark"] .mushaf-page-nav button, html[data-theme="thikr"] .mushaf-page-nav button{ color:var(--gold-300); }
+html[data-theme="dark"] .mushaf-page-nav button, html[data-theme="thikr"] .mushaf-page-nav button{
+  background:linear-gradient(135deg, #142642, #1f3c68); border-color:#5580bf; color:#E7EDF6;
+  box-shadow:0 0 10px rgba(85,128,191,.25), inset 0 1px 0 rgba(255,255,255,.06);
+}
+html[data-theme="dark"] .mushaf-page-nav button:disabled, html[data-theme="thikr"] .mushaf-page-nav button:disabled{ box-shadow:none; }
 .mushaf-page-num{ width:38px; height:38px; border-radius:50%; border:1.5px solid var(--gold-500); display:flex; align-items:center; justify-content:center; font-family:'Amiri',serif; font-weight:700; font-size:14px; color:var(--green-800); flex-shrink:0; }
-html[data-theme="dark"] .mushaf-page-num, html[data-theme="thikr"] .mushaf-page-num{ color:var(--gold-300); }
+html[data-theme="dark"] .mushaf-page-num, html[data-theme="thikr"] .mushaf-page-num{
+  background:linear-gradient(135deg, #142642, #1f3c68); border-color:#5580bf; color:#E7EDF6;
+  box-shadow:0 0 10px rgba(85,128,191,.25), inset 0 1px 0 rgba(255,255,255,.06);
+}
 .mushaf-mid-header{ text-align:center; margin:18px 0 10px; padding:8px 0; border-top:1px solid var(--gold-300); border-bottom:1px solid var(--gold-300); font-family:'Amiri',serif; font-weight:700; font-size:16px; color:var(--green-800); }
 html[data-theme="dark"] .mushaf-mid-header, html[data-theme="thikr"] .mushaf-mid-header{ color:var(--gold-300); }
-.reader-ayah .ayah-unit{ cursor:pointer; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:manipulation; }
-.reader-ayah .ayah-unit.ayah-highlight{background:var(--gold-100); border-radius:8px; box-shadow:0 0 0 4px var(--gold-100);}
-.reader-ayah .num-badge{
-  display:inline-flex; width:30px; height:30px; border-radius:50%;
-  background:var(--gold-100); border:1.5px solid var(--gold-500); color:var(--green-800);
-  font-family:'Tajawal',sans-serif; font-size:12.5px; font-weight:800;
-  align-items:center; justify-content:center; margin:0 5px; vertical-align:middle;
-  box-shadow:0 0 0 2px var(--surface); position:relative;
-}
-html[data-theme="dark"] .reader-ayah .num-badge{ background:rgba(201,162,60,.18); border-color:var(--gold-300); }
-html[data-theme="thikr"] .reader-ayah .num-badge{ background:rgba(201,162,60,.18); border-color:var(--gold-300); }
-html[data-theme="dark"] .reader-ayah .ayah-unit.ayah-highlight{ background:rgba(201,162,60,.22); box-shadow:0 0 0 4px rgba(201,162,60,.22); }
-html[data-theme="thikr"] .reader-ayah .ayah-unit.ayah-highlight{ background:rgba(201,162,60,.22); box-shadow:0 0 0 4px rgba(201,162,60,.22); }
-.reader-ayah .num-badge .bm-ribbon{
+.num-badge.ayah-highlight{ background:var(--gold-100); border-radius:50%; box-shadow:0 0 0 4px var(--gold-100); }
+html[data-theme="dark"] .num-badge.ayah-highlight, html[data-theme="thikr"] .num-badge.ayah-highlight{ background:rgba(85,128,191,.30); box-shadow:0 0 0 4px rgba(85,128,191,.30); }
+.num-badge .bm-ribbon{
   position:absolute; top:-9px; right:-5px; width:14px; height:17px;
   color:var(--gold-600); pointer-events:none; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25));
 }
-html[data-theme="dark"] .reader-ayah .num-badge .bm-ribbon{ color:var(--gold-300); }
-html[data-theme="thikr"] .reader-ayah .num-badge .bm-ribbon{ color:var(--gold-300); }
-.reader-ayah .ayah-unit.ayah-bookmarked{ background:var(--green-50); border-radius:8px; }
-html[data-theme="dark"] .reader-ayah .ayah-unit.ayah-bookmarked{ background:rgba(147,201,166,.10); }
-html[data-theme="thikr"] .reader-ayah .ayah-unit.ayah-bookmarked{ background:rgba(147,201,166,.10); }
+html[data-theme="dark"] .num-badge .bm-ribbon, html[data-theme="thikr"] .num-badge .bm-ribbon{ color:#9EB8DE; }
+.num-badge.ayah-bookmarked .medallion-bg{ color:var(--gold-600); filter:drop-shadow(0 0 3px rgba(203,154,52,.6)); }
+html[data-theme="dark"] .num-badge.ayah-bookmarked .medallion-bg, html[data-theme="thikr"] .num-badge.ayah-bookmarked .medallion-bg{ color:#9EB8DE; filter:drop-shadow(0 0 3px rgba(85,128,191,.7)); }
 
 /* ---------- settings ---------- */
 .toggle-row{display:flex; align-items:center; justify-content:space-between; padding:14px 0;}
@@ -835,8 +838,6 @@ html[data-theme="dark"] .back-btn{ color:var(--mint); }
 html[data-theme="thikr"] .back-btn{ color:var(--mint); }
 html[data-theme="dark"] .surah-num{ color:var(--mint); }
 html[data-theme="thikr"] .surah-num{ color:var(--mint); }
-html[data-theme="dark"] .reader-ayah .num-badge{ color:var(--mint); }
-html[data-theme="thikr"] .reader-ayah .num-badge{ color:var(--mint); }
 html[data-theme="dark"] select{ color-scheme:dark; }
 html[data-theme="thikr"] select{ color-scheme:dark; }
 html[data-theme="dark"] select option{ background:var(--surface); color:var(--text); }
@@ -3867,6 +3868,18 @@ function renderQuranReader(){
   `;
 }
 
+let MUSHAF_LINES = null;
+async function loadMushafLines(){
+  if(MUSHAF_LINES) return MUSHAF_LINES;
+  const res = await fetch('mushaf-lines.json');
+  if(!res.ok) throw new Error('http_' + res.status);
+  MUSHAF_LINES = await res.json();
+  return MUSHAF_LINES;
+}
+function toArabicDigits(n){
+  const map = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+  return String(n).split('').map(c => /[0-9]/.test(c) ? map[+c] : c).join('');
+}
 async function loadQuranData(){
   if(QURAN_DATA) return QURAN_DATA;
   const res = await fetch('quran-data.json');
@@ -3897,46 +3910,56 @@ screenRenderers.quran = function(){
   if(DB.ui.quranSection === 'ruqyah') return renderRuqyah();
   return DB.ui.quranView === 'reader' ? renderQuranReader() : renderQuranList();
 };
-function loadReaderInto(pageNum){
+function loadReaderInto(pageNum, isRetry){
   const body = document.getElementById('quran-reader-body');
   if(body) body.innerHTML = `<div class="empty">جارِ التحميل...</div>`;
   const p = mushafPageInfo(pageNum);
   if(!p) return;
-  const spansTwo = p.endSurah !== p.startSurah;
-  Promise.all([loadSurahText(p.startSurah), spansTwo ? loadSurahText(p.endSurah) : Promise.resolve(null)]).then(([s1, s2])=>{
+  loadMushafLines().then(allLines=>{
+    const lines = allLines[pageNum-1];
+    if(!lines) throw new Error('no_lines');
+    const bismillahSurahs = new Set();
+    let scanSurah = p.startSurah;
+    for(const entry of lines){
+      if(entry[0]==='h') scanSurah = entry[1];
+      if(entry[0]==='b') bismillahSurahs.add(scanSurah);
+    }
+    return Promise.all([...bismillahSurahs].map(sn=>loadSurahText(sn).then(s=>[sn,s]))).then(pairs=>{
+      const bismillahMap = {};
+      pairs.forEach(([sn,s])=>{ bismillahMap[sn] = s.bismillah; });
+      return {lines, bismillahMap};
+    });
+  }).then(({lines, bismillahMap})=>{
     const el = document.getElementById('quran-reader-body');
     if(!el) return;
     quranSaveLast(p.startSurah, p.startAyah);
     const bm = DB.quran.bookmark;
-    function ayahSpan(surahNum, ayahNum, ayahText){
-      const isBm = bm && bm.surah===surahNum && bm.ayah===ayahNum;
-      return `<span class="ayah-unit${isBm?' ayah-bookmarked':''}" id="ayah-${surahNum}-${ayahNum}"
-        onpointerdown="quranAyahPressStart(${surahNum},${ayahNum},event)" onpointerup="quranAyahPressEnd()"
-        onpointerleave="quranAyahPressEnd()" onpointercancel="quranAyahPressEnd()"
-        oncontextmenu="return false;"
-        >${ayahText}<span class="num-badge">${ayahMedallionSVG()}<span class="medallion-num">${ayahNum}</span>${isBm?'<span class="bm-ribbon">'+bookmarkIcon(14,true)+'</span>':''}</span></span>`;
-    }
+    let currentSurah = p.startSurah;
     let html = '';
-    if(p.startAyah === 1 && p.startSurah !== 9 && s1.bismillah){
-      html += `<div class="reader-ayah" style="text-align:center; margin-bottom:16px;">${s1.bismillah}</div>`;
-    }
-    const firstEnd = spansTwo ? s1.ayahs.length : p.endAyah;
-    html += `<div class="reader-ayah">`;
-    for(let i=p.startAyah; i<=firstEnd; i++){
-      html += ayahSpan(p.startSurah, i, s1.ayahs[i-1]) + ' ';
-    }
-    html += `</div>`;
-    if(spansTwo){
-      const endSurahMeta = SURAHS.find(x=>x[0]===p.endSurah);
-      html += `<div class="mushaf-mid-header">${isEn()?'Surah':'سورة'} ${endSurahMeta[1]}</div>`;
-      if(p.endSurah !== 9 && s2.bismillah){
-        html += `<div class="reader-ayah" style="text-align:center; margin-bottom:16px;">${s2.bismillah}</div>`;
+    for(const entry of lines){
+      if(entry[0]==='h'){
+        currentSurah = entry[1];
+        const meta = SURAHS.find(x=>x[0]===currentSurah);
+        html += `<div class="mushaf-mid-header">${isEn()?'Surah':'سورة'} ${meta ? meta[1] : currentSurah}</div>`;
+      }else if(entry[0]==='b'){
+        const bism = bismillahMap[currentSurah];
+        if(bism) html += `<div class="mushaf-line" style="text-align:center; text-align-last:center;">${bism}</div>`;
+      }else if(entry[0]==='t'){
+        const lineText = entry[1];
+        const surahForLine = currentSurah;
+        let ayahCounter = entry[2];
+        const rendered = lineText.replace(/[\u0660-\u0669]+/g, (match)=>{
+          const ayahNum = ayahCounter;
+          ayahCounter++;
+          const isBm = bm && bm.surah===surahForLine && bm.ayah===ayahNum;
+          return `<span class="num-badge${isBm?' ayah-bookmarked':''}" id="mark-${surahForLine}-${ayahNum}"
+            onpointerdown="quranAyahPressStart(${surahForLine},${ayahNum},event)" onpointerup="quranAyahPressEnd()"
+            onpointerleave="quranAyahPressEnd()" onpointercancel="quranAyahPressEnd()"
+            oncontextmenu="return false;"
+            >${ayahMedallionSVG()}<span class="medallion-num">${toArabicDigits(ayahNum)}</span>${isBm?'<span class="bm-ribbon">'+bookmarkIcon(14,true)+'</span>':''}</span>`;
+        });
+        html += `<div class="mushaf-line">${rendered}</div>`;
       }
-      html += `<div class="reader-ayah">`;
-      for(let i=1; i<=p.endAyah; i++){
-        html += ayahSpan(p.endSurah, i, s2.ayahs[i-1]) + ' ';
-      }
-      html += `</div>`;
     }
     el.innerHTML = `<div class="mushaf-frame">
       <span class="mushaf-corner tl">${mushafCornerSVG()}</span>
@@ -3950,7 +3973,7 @@ function loadReaderInto(pageNum){
       DB.ui.quranTargetAyah = null; DB.ui.quranTargetSurah = null;
       saveDB();
       setTimeout(()=>{
-        const targetEl = document.getElementById('ayah-'+targetS+'-'+targetA);
+        const targetEl = document.getElementById('mark-'+targetS+'-'+targetA);
         if(targetEl){
           targetEl.scrollIntoView({behavior:'smooth', block:'center'});
           targetEl.classList.add('ayah-highlight');
@@ -3960,6 +3983,10 @@ function loadReaderInto(pageNum){
     }
   }).catch(()=>{
     QURAN_DATA = null;
+    if(!isRetry){
+      setTimeout(()=>loadReaderInto(pageNum, true), 700);
+      return;
+    }
     const el = document.getElementById('quran-reader-body');
     if(el) el.innerHTML = `
       <div class="empty">
