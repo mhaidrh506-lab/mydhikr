@@ -4071,12 +4071,21 @@ async function quranRenderPageHTML(pageNum){
   await Promise.all([...bismillahSurahs].map(sn => loadSurahText(sn).then(s=>{ bismillahMap[sn] = s.bismillah; })));
   let currentSurah = p.startSurah;
   let html = '';
+  let buffer = '';
+  function flushBuffer(){
+    if(buffer){
+      html += `<div class="mushaf-line">${buffer}</div>`;
+      buffer = '';
+    }
+  }
   for(const entry of lines){
     if(entry[0]==='h'){
+      flushBuffer();
       currentSurah = parseInt(entry[1], 10);
       const meta = SURAHS.find(x=>x[0]===currentSurah);
       html += `<div class="mushaf-surah-banner"><span class="banner-rosette">${ayahMedallionSVG()}</span><span>${isEn()?'Surah':'سورة'} ${meta ? meta[1] : currentSurah}</span><span class="banner-rosette">${ayahMedallionSVG()}</span></div>`;
     }else if(entry[0]==='b'){
+      flushBuffer();
       const bism = bismillahMap[currentSurah];
       if(bism) html += `<div class="mushaf-line" style="text-align:center; text-align-last:center;">${bism}</div>`;
     }else if(entry[0]==='t'){
@@ -4091,9 +4100,10 @@ async function quranRenderPageHTML(pageNum){
           onclick="quranAyahTap(${surahForLine},${ayahNum},event)"
           >${ayahMedallionSVG()}<span class="medallion-num">${toArabicDigits(ayahNum)}</span>${isBm?'<span class="bm-ribbon">'+bookmarkIcon(14,true)+'</span>':''}</span>`;
       });
-      html += `<div class="mushaf-line">${rendered}</div>`;
+      buffer += (buffer ? ' ' : '') + rendered;
     }
   }
+  flushBuffer();
   return `<div class="mushaf-page-block" data-page="${pageNum}" id="mushaf-page-${pageNum}">${html}</div>`;
 }
 let _mushafLoadedPages = [];
