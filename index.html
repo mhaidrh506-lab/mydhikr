@@ -351,9 +351,14 @@ html[data-theme="thikr"] .brand-row .word{ color:var(--gold-300); }
   width:250px; height:250px; border-radius:50%;
   display:flex; align-items:center; justify-content:center; flex-direction:column;
   cursor:pointer; position:relative; flex-shrink:0;
+  transition:transform .12s ease;
 }
 .counter-dial:active{transform:scale(.97);}
-.counter-dial.novibrate:active{transform:none;}
+@keyframes tasbihTapPulse{
+  0%{ box-shadow:0 0 0 0 rgba(203,154,52,.5); }
+  100%{ box-shadow:0 0 0 24px rgba(203,154,52,0); }
+}
+.counter-dial.tap-pulse{ animation:tasbihTapPulse .55s ease-out; }
 .counter-dial .ring{position:absolute; inset:8px;}
 .counter-dial .ring svg{width:100%; height:100%; transform:rotate(-90deg);}
 
@@ -2603,6 +2608,12 @@ function tasbihIncrement(){
     DB.tasbih.allTime[key] = (Number.isFinite(DB.tasbih.allTime[key]) ? DB.tasbih.allTime[key] : 0) + 1;
     saveDB();
     if(DB.settings.tasbihVibrate) vibrate(12);
+    const dialEl = document.getElementById('tasbih-dial');
+    if(dialEl){
+      dialEl.classList.remove('tap-pulse');
+      void dialEl.offsetWidth;
+      dialEl.classList.add('tap-pulse');
+    }
     const n = today[key][style];
     const goal = DB.tasbih.dailyGoal || 100;
     const numEl = document.getElementById('tasbih-num');
@@ -2818,7 +2829,7 @@ function renderTasbih(){
       `}
       <div style="flex:1"></div>
       <div class="counter-wrap" style="padding-bottom:calc(24px + var(--safe-bottom));">
-        <button class="counter-dial ${style} ${DB.settings.tasbihVibrate ? '' : 'novibrate'}" id="tasbih-dial" onclick="tasbihIncrement()">
+        <button class="counter-dial ${style}" id="tasbih-dial" onclick="tasbihIncrement()">
           ${counterInner}
         </button>
       </div>
