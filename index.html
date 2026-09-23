@@ -3848,17 +3848,18 @@ let _adhkarDragStartY = null;
 let _adhkarDragLocked = null; // true = horizontal swipe, false = vertical scroll, null = undecided
 function after_adhkar(){
   const card = document.querySelector('.adhkar-reader-card');
-  if(!card) return;
+  const stage = document.querySelector('.adhkar-reader-stage');
+  if(!card || !stage) return;
   card.style.transform = '';
   card.style.opacity = '';
   card.style.transition = '';
-  card.addEventListener('touchstart', (e)=>{
+  stage.addEventListener('touchstart', (e)=>{
     _adhkarDragStartX = e.touches[0].clientX;
     _adhkarDragStartY = e.touches[0].clientY;
     _adhkarDragLocked = null;
     card.style.transition = 'none';
   }, {passive:true});
-  card.addEventListener('touchmove', (e)=>{
+  stage.addEventListener('touchmove', (e)=>{
     if(_adhkarDragStartX === null) return;
     const dx = e.touches[0].clientX - _adhkarDragStartX;
     const dy = e.touches[0].clientY - _adhkarDragStartY;
@@ -3871,7 +3872,7 @@ function after_adhkar(){
       card.style.opacity = String(Math.max(1 - Math.abs(dx)/280, 0.35));
     }
   }, {passive:false});
-  card.addEventListener('touchend', (e)=>{
+  stage.addEventListener('touchend', (e)=>{
     if(_adhkarDragStartX === null) return;
     const dx = e.changedTouches[0].clientX - _adhkarDragStartX;
     const wasHorizontal = _adhkarDragLocked;
