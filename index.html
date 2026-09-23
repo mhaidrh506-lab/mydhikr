@@ -45,11 +45,12 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-html,body{margin:0;padding:0;height:100%;background:var(--ivory);}
+html,body{margin:0;padding:0;height:100%;background:var(--ivory); overflow-x:hidden;}
 body{
   font-family:'Tajawal', system-ui, sans-serif;
   color:var(--text);
   overscroll-behavior-y:none;
+  overscroll-behavior-x:none;
   -webkit-user-select:none;
   user-select:none;
 }
@@ -65,6 +66,7 @@ button{font-family:inherit;}
   background:linear-gradient(180deg, var(--ivory-top) 0%, var(--ivory) 320px);
   position:relative;
   padding-bottom:calc(84px + var(--safe-bottom));
+  overflow-x:hidden;
 }
 
 .screen{display:none; animation:fadeIn .28s ease;}
