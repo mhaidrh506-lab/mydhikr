@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dhikr-cache-v133';
+const CACHE_NAME = 'dhikr-cache-v136';
 const SHELL_FILES = [
   './',
   './index.html',
@@ -27,12 +27,13 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
+  const isNav = event.request.mode === 'navigate';
   event.respondWith(
-    caches.match(event.request).then((cached) => {
+    caches.match(event.request, isNav ? { ignoreSearch: true } : undefined).then((cached) => {
       if (cached) return cached;
       return fetch(event.request)
         .then((response) => {
-          if (response && response.status === 200) {
+          if (response && response.status === 200 && !(isNav && url.search)) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           }

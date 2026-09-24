@@ -1677,7 +1677,16 @@ async function shareDhikrImage(mainText, subText){
   ctx.direction = 'ltr';
   ctx.font = '700 40px Tajawal, sans-serif';
   ctx.fillStyle = '#C9A23C';
-  ctx.fillText(isEn() ? 'MyDhikr' : 'ذكر', W/2, H-100);
+  ctx.fillText(isEn() ? 'MyDhikr' : 'ذكر', W/2, H-118);
+
+  // سطر تسويقي خافت أسفل الصورة
+  ctx.save();
+  ctx.globalAlpha = 0.5;
+  ctx.direction = isEn() ? 'ltr' : 'rtl';
+  ctx.font = '500 24px Tajawal, sans-serif';
+  ctx.fillStyle = '#DDBB6B';
+  ctx.fillText(isEn() ? 'Adhkar • Quran • Tasbih — free on Google Play' : 'أذكار • قرآن • تسبيح — حمّله مجانًا من Google Play', W/2, H-78);
+  ctx.restore();
 
   const blob = await new Promise(res=>{ try{ canvas.toBlob(res, 'image/png', 0.95); }catch(e){ res(null); } });
   if(!blob){ toast(isEn()?'Could not create image':'تعذر إنشاء الصورة'); return; }
@@ -1686,6 +1695,12 @@ async function shareDhikrImage(mainText, subText){
 }
 
 /* ===== مساعدات المشاركة والحفظ (v133) ===== */
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=app.vercel.mydhikr.twa';
+function shareCaption(){
+  return isEn()
+    ? `📿 From the MyDhikr app — Adhkar, Quran & Tasbih\nGet it free: ${PLAY_STORE_URL}`
+    : `📿 من تطبيق ذكر — أذكار وقرآن وتسبيح\nحمّله مجانًا: ${PLAY_STORE_URL}`;
+}
 function saveBlobAs(blob, name){
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1704,7 +1719,7 @@ async function shareFileSmart(file, blob){
     return;
   }
   try{
-    await navigator.share({files:[file], title});
+    await navigator.share({files:[file], title, text: shareCaption()});
   }catch(e){
     if(e && e.name === 'AbortError') return; // المستخدم سكّر نافذة المشاركة
     // غالبًا انتهت صلاحية "نقرة المستخدم" أثناء تجهيز الصورة → نطلب نقرة جديدة
@@ -1728,7 +1743,7 @@ function showShareReady(file, blob){
   document.body.appendChild(modal);
   modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.remove(); });
   document.getElementById('share-ready-go').onclick = async ()=>{
-    try{ await navigator.share({files:[file], title: isEn()?'MyDhikr':'ذكر'}); modal.remove(); }
+    try{ await navigator.share({files:[file], title: isEn()?'MyDhikr':'ذكر', text: shareCaption()}); modal.remove(); }
     catch(e){
       if(e && e.name === 'AbortError'){ modal.remove(); return; }
       saveBlobAs(blob, file.name); modal.remove();
@@ -5172,7 +5187,17 @@ async function saveForYouContent(){
 let _foryouMuted = true;
 function renderForYou(){
   loadForYouContent();
-  const activeVideos = FORYOU_STATE.videos.filter(v => v.active !== false);
+  let activeVideos = FORYOU_STATE.videos.filter(v => v.active !== false);
+  if(_foryouDeepLink && FORYOU_STATE.loaded){
+    const dl = _foryouDeepLink;
+    const idx = activeVideos.findIndex(v => (dl.id && v.id === dl.id) || (dl.url && v.url === dl.url));
+    if(idx > 0){
+      activeVideos = [activeVideos[idx], ...activeVideos.slice(0, idx), ...activeVideos.slice(idx + 1)];
+    }else if(idx === -1){
+      toast(isEn() ? 'This video is no longer available' : 'هذا المقطع لم يعد متاحًا');
+    }
+    _foryouDeepLink = null;
+  }
 
   if(FORYOU_STATE.loading && !FORYOU_STATE.loaded){
     return `<div class="foryou-empty-wrap"><div style="color:var(--text-muted); text-align:center;">${isEn() ? 'Loading…' : 'جاري التحميل…'}</div></div>`;
@@ -5220,7 +5245,7 @@ function renderForYou(){
             <button class="foryou-action-btn" onclick="foryouDownload('${v.url}')">
               <span class="foryou-action-icon">${downloadIcon(19)}</span>
             </button>
-            <button class="foryou-action-btn" onclick="foryouShare('${v.url}')">
+            <button class="foryou-action-btn" onclick="foryouShare('${v.id ? v.id : ''}', '${v.url}')">
               <span class="foryou-action-icon">${shareForwardIcon(19)}</span>
             </button>
           </div>
@@ -5307,29 +5332,247 @@ function updateForYouBadge(){
     badge.style.display = 'none';
   }
 }
+/* ===== تحميل المقطع مع خاتمة "ذكر" (v135) ===== */
+let _brandJob = null;
+const BRAND_OUTRO_SEC = 3;
+const BRAND_MAX_SEC = 180; // المقاطع الأطول تنحفظ بدون خاتمة
+
 async function foryouDownload(url){
-  toast(isEn() ? 'Downloading…' : 'جاري التنزيل…');
+  if(_brandJob){ toast(isEn() ? 'Another clip is being prepared…' : 'جاري تجهيز مقطع آخر…'); return; }
+  _brandJob = { cancelled:false, cancel:null };
+  showBrandProgress(0, isEn() ? 'Downloading…' : 'جاري التنزيل…');
+  let blob = null;
   try{
     const res = await fetch(url, {mode:'cors'});
     if(!res.ok) throw new Error('HTTP '+res.status);
-    const blob = await res.blob();
-    saveBlobAs(blob, 'mydhikr-video.mp4');
-    toast(isEn() ? 'Video saved' : 'تم حفظ الفيديو');
+    blob = await res.blob();
   }catch(e){
-    // لو التخزين ما يسمح بالتحميل المباشر (CORS)، نفتح الفيديو نفسه
+    hideBrandProgress(); _brandJob = null;
     const a = document.createElement('a');
     a.href = url; a.target = '_blank'; a.rel = 'noopener';
     document.body.appendChild(a); a.click(); a.remove();
     toast(isEn() ? 'Opened the video — use ⋮ → Download' : 'انفتح الفيديو — اضغط ⋮ ثم تنزيل');
+    return;
+  }
+  if(_brandJob.cancelled){ hideBrandProgress(); _brandJob = null; return; }
+  try{
+    const out = await brandVideoBlob(blob, p => showBrandProgress(p));
+    saveBlobAs(out.blob, 'mydhikr-video.' + out.ext);
+    toast(isEn() ? 'Clip saved ✅' : 'تم حفظ المقطع ✅');
+  }catch(e){
+    if(e && e.message === 'cancelled'){
+      toast(isEn() ? 'Cancelled' : 'تم الإلغاء');
+    }else{
+      // الجهاز ما يدعم التسجيل → نحفظ المقطع الأصلي بدون خاتمة
+      saveBlobAs(blob, 'mydhikr-video.mp4');
+      toast(isEn() ? 'Clip saved' : 'تم حفظ المقطع');
+    }
+  }finally{
+    hideBrandProgress(); _brandJob = null;
   }
 }
-async function foryouShare(url){
+
+function showBrandProgress(p, label){
+  let m = document.getElementById('brand-progress-modal');
+  if(!m){
+    m = document.createElement('div');
+    m.id = 'brand-progress-modal';
+    m.className = 'page-jump-modal';
+    m.innerHTML = `
+      <div class="page-jump-box" style="text-align:center">
+        <div class="page-jump-title" id="brand-progress-label"></div>
+        <div style="height:8px; border-radius:99px; background:rgba(127,127,127,.25); overflow:hidden; margin:12px 0 8px;">
+          <div id="brand-progress-bar" style="height:100%; width:0%; background:var(--gold-500, #C9A23C); transition:width .3s;"></div>
+        </div>
+        <div style="font-size:12px; opacity:.7; margin-bottom:12px;">${isEn() ? "Keep the app open until it finishes" : "خلّ التطبيق مفتوح لين يخلص"}</div>
+        <div class="page-jump-row" style="justify-content:center"><button onclick="cancelBrandJob()">${isEn() ? 'Cancel' : 'إلغاء'}</button></div>
+      </div>`;
+    document.body.appendChild(m);
+  }
+  const pct = Math.max(0, Math.min(100, Math.round(p * 100)));
+  const lbl = document.getElementById('brand-progress-label');
+  lbl.textContent = label || ((isEn() ? 'Preparing clip… ' : 'جاري تجهيز المقطع… ') + pct + '%');
+  document.getElementById('brand-progress-bar').style.width = pct + '%';
+}
+function hideBrandProgress(){
+  const m = document.getElementById('brand-progress-modal');
+  if(m) m.remove();
+}
+function cancelBrandJob(){
+  if(!_brandJob) return;
+  _brandJob.cancelled = true;
+  if(_brandJob.cancel) _brandJob.cancel();
+  hideBrandProgress();
+}
+
+function pickRecorderType(){
+  if(!window.MediaRecorder) return null;
+  const types = [
+    'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+    'video/mp4',
+    'video/webm;codecs=vp9,opus',
+    'video/webm;codecs=vp8,opus',
+    'video/webm'
+  ];
+  return types.find(t => { try{ return MediaRecorder.isTypeSupported(t); }catch(e){ return false; } }) || null;
+}
+function loadImage(src){
+  return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+}
+function drawBrandOutro(ctx, W, H, icon, a){
+  ctx.save();
+  ctx.globalAlpha = a;
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#173D2F'); g.addColorStop(1, '#0F2A21');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+  const u = Math.min(W, H);
+  const cx = W / 2, cy = H / 2 - u * 0.12;
+  if(icon){
+    const s = u * 0.32, r = s * 0.22;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx - s/2 + r, cy - s/2);
+    ctx.arcTo(cx + s/2, cy - s/2, cx + s/2, cy + s/2, r);
+    ctx.arcTo(cx + s/2, cy + s/2, cx - s/2, cy + s/2, r);
+    ctx.arcTo(cx - s/2, cy + s/2, cx - s/2, cy - s/2, r);
+    ctx.arcTo(cx - s/2, cy - s/2, cx + s/2, cy - s/2, r);
+    ctx.closePath(); ctx.clip();
+    ctx.drawImage(icon, cx - s/2, cy - s/2, s, s);
+    ctx.restore();
+  }
+  ctx.textAlign = 'center';
+  ctx.direction = 'rtl';
+  ctx.fillStyle = '#FAF7F0';
+  ctx.font = `700 ${Math.round(u * 0.13)}px Amiri, serif`;
+  ctx.fillText(isEn() ? 'MyDhikr' : 'ذكر', cx, cy + u * 0.33);
+  ctx.fillStyle = '#DDBB6B';
+  ctx.font = `500 ${Math.round(u * 0.045)}px Tajawal, sans-serif`;
+  ctx.fillText(isEn() ? 'Adhkar • Quran • Tasbih' : 'أذكار • قرآن • تسبيح', cx, cy + u * 0.42);
+  ctx.fillStyle = '#C9A23C';
+  ctx.font = `700 ${Math.round(u * 0.05)}px Tajawal, sans-serif`;
+  ctx.fillText(isEn() ? 'Free on Google Play' : 'حمّله مجانًا من Google Play', cx, cy + u * 0.53);
+  ctx.restore();
+}
+
+async function brandVideoBlob(srcBlob, onProgress){
+  const type = pickRecorderType();
+  if(!type || !HTMLCanvasElement.prototype.captureStream) throw new Error('unsupported');
+
+  const srcUrl = URL.createObjectURL(srcBlob);
+  const video = document.createElement('video');
+  video.src = srcUrl; video.playsInline = true; video.preload = 'auto';
+  video.setAttribute('playsinline', '');
+  video.style.cssText = 'position:fixed; left:-9999px; top:0; width:2px; height:2px; opacity:0; pointer-events:none;';
+  document.body.appendChild(video);
+
+  let actx = null, raf = 0, onVis = null;
+  const cleanup = () => {
+    cancelAnimationFrame(raf);
+    if(onVis) document.removeEventListener('visibilitychange', onVis);
+    try{ video.pause(); }catch(e){}
+    video.remove();
+    URL.revokeObjectURL(srcUrl);
+    if(actx) actx.close().catch(()=>{});
+  };
+
+  try{
+    await new Promise((res, rej) => {
+      video.onloadedmetadata = res;
+      video.onerror = () => rej(new Error('load'));
+    });
+    const dur = isFinite(video.duration) ? video.duration : 0;
+    if(!dur || dur > BRAND_MAX_SEC) throw new Error('duration');
+
+    let W = video.videoWidth || 720, H = video.videoHeight || 1280;
+    const k = Math.min(1, 1280 / Math.max(W, H));
+    W = Math.round(W * k / 2) * 2; H = Math.round(H * k / 2) * 2;
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    const icon = await loadImage('icons/icon-512.png').catch(() => null);
+    try{
+      if(document.fonts && document.fonts.load){
+        await document.fonts.load('700 60px Amiri');
+        await document.fonts.load('700 40px Tajawal');
+      }
+    }catch(e){}
+
+    const stream = canvas.captureStream(30);
+    try{
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      const src = actx.createMediaElementSource(video); // الصوت يروح للتسجيل بس، مو للسماعة
+      const dest = actx.createMediaStreamDestination();
+      src.connect(dest);
+      dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
+      if(actx.state === 'suspended') await actx.resume();
+    }catch(e){ /* بدون صوت لو ما انفتح AudioContext */ }
+
+    const rec = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 4000000 });
+    const chunks = [];
+    rec.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
+    const stopped = new Promise(res => { rec.onstop = res; });
+
+    const total = dur + BRAND_OUTRO_SEC;
+    let phase = 'video', outroStart = 0, lastP = -1;
+    const report = p => { if(Math.abs(p - lastP) >= 0.01){ lastP = p; onProgress(p); } };
+
+    const finish = () => { if(phase === 'done') return; phase = 'done'; cancelAnimationFrame(raf); if(rec.state !== 'inactive') rec.stop(); };
+    if(_brandJob) _brandJob.cancel = finish;
+
+    video.onended = () => { phase = 'outro'; outroStart = performance.now(); };
+
+    const draw = () => {
+      if(phase === 'done') return;
+      if(phase === 'video'){
+        ctx.drawImage(video, 0, 0, W, H);
+        report(video.currentTime / total);
+      }else{
+        const t = (performance.now() - outroStart) / 1000;
+        ctx.drawImage(video, 0, 0, W, H); // آخر لقطة تحت الخاتمة
+        drawBrandOutro(ctx, W, H, icon, Math.min(t / 0.6, 1));
+        report((dur + t) / total);
+        if(t >= BRAND_OUTRO_SEC){ finish(); return; }
+      }
+      raf = requestAnimationFrame(draw);
+    };
+
+    // لو المستخدم طلع من التطبيق نوقّف مؤقتًا عشان ما يتقطّع المقطع
+    onVis = () => {
+      if(phase !== 'video') return;
+      if(document.hidden){ video.pause(); if(rec.state === 'recording') rec.pause(); }
+      else{ if(rec.state === 'paused') rec.resume(); video.play().catch(()=>{}); }
+    };
+    document.addEventListener('visibilitychange', onVis);
+
+    rec.start(500);
+    await video.play();
+    raf = requestAnimationFrame(draw);
+    await stopped;
+
+    if(_brandJob && _brandJob.cancelled) throw new Error('cancelled');
+    if(!chunks.length) throw new Error('empty');
+    const mime = type.split(';')[0];
+    return { blob: new Blob(chunks, { type: mime }), ext: mime.includes('mp4') ? 'mp4' : 'webm' };
+  }finally{
+    cleanup();
+  }
+}
+
+function foryouVideoLink(id, url){
+  const base = location.origin + '/';
+  return id ? `${base}?v=${encodeURIComponent(id)}` : `${base}?vu=${encodeURIComponent(url)}`;
+}
+async function foryouShare(id, url){
+  const link = foryouVideoLink(id, url);
+  const text = isEn() ? 'Watch this clip on MyDhikr 👇' : 'شاهد هذا المقطع في تطبيق ذكر 👇';
   if(navigator.share){
-    try{ await navigator.share({ url, title: 'MyDhikr' }); return; }
+    try{ await navigator.share({ title: isEn() ? 'MyDhikr' : 'ذكر', text, url: link }); return; }
     catch(e){ if(e && e.name === 'AbortError') return; }
   }
   try{
-    await navigator.clipboard.writeText(url);
+    await navigator.clipboard.writeText(`${text}\n${link}`);
     toast(isEn() ? 'Link copied' : 'تم نسخ الرابط');
   }catch(e){
     toast(isEn() ? 'Could not share' : 'تعذر المشاركة');
@@ -5941,8 +6184,20 @@ function forceHomeTab(){
   DB.ui.adhkarView = 'grid';
   saveDB();
 }
+let _foryouDeepLink = null;
+function readVideoDeepLink(){
+  try{
+    const q = new URLSearchParams(location.search);
+    const id = q.get('v'), url = q.get('vu');
+    if(!id && !url) return false;
+    _foryouDeepLink = { id: id || null, url: url || null };
+    history.replaceState(null, '', location.pathname); // نشيل الباراميتر عشان ما يتكرر مع التحديث
+    return true;
+  }catch(e){ return false; }
+}
 function bootApp(){
   forceHomeTab();
+  if(readVideoDeepLink()){ DB.ui.tab = 'foryou'; saveDB(); }
   applyTheme();
   applyLangDir();
   renderShell();
