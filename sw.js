@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dhikr-cache-v139';
+const CACHE_NAME = 'dhikr-cache-v140';
 const SHELL_FILES = [
   './',
   './index.html',

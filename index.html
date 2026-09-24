@@ -2534,7 +2534,7 @@ function renderHome(){
         <div class="k" id="dhikr-k">${dhikr.k}</div>
         <div class="v scripture" id="dhikr-v">${dhikr.v}</div>
       </div>
-      <button onclick="event.stopPropagation(); shareDhikrImage(_homeDhikrShare.main, _homeDhikrShare.sub)" aria-label="${isEn()?'Share':'مشاركة'}"
+      <button onclick="event.stopPropagation(); homeShareCurrentDhikr()" aria-label="${isEn()?'Share':'مشاركة'}"
         style="background:none; border:none; color:var(--gold-600); flex-shrink:0; cursor:pointer; padding:6px;">${shareIcon(20)}</button>
     </div>
 
@@ -2594,6 +2594,14 @@ function scheduleDhikrRotation(delay){
   clearTimeout(_dhikrTimer);
   _dhikrTimer = setTimeout(rotateDhikr, delay);
 }
+function homeShareCurrentDhikr(){
+  // نشارك الذكر الظاهر حاليًا على الشاشة (مو أول واحد)
+  const vEl = document.getElementById('dhikr-v');
+  const kEl = document.getElementById('dhikr-k');
+  const main = (vEl && vEl.textContent.trim()) || (_homeDhikrShare && _homeDhikrShare.main);
+  const sub = (kEl && kEl.textContent.trim()) || (_homeDhikrShare && _homeDhikrShare.sub) || '';
+  if(main) shareDhikrImage(main, sub);
+}
 function rotateDhikr(){
   if(DB.ui.tab !== 'home') return;
   const pool = dhikrRotationPool();
@@ -2609,6 +2617,7 @@ function rotateDhikr(){
     if(!kEl2 || !vEl2) return;
     kEl2.textContent = item.k;
     vEl2.textContent = item.v;
+    _homeDhikrShare = {main: item.v, sub: item.k};
     kEl2.style.opacity = 1; vEl2.style.opacity = 1;
     requestAnimationFrame(()=>{
       requestAnimationFrame(()=>{
