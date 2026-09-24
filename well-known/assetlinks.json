@@ -1,8 +1,13 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "app.vercel.mydhikr.twa",
-        "sha256_cert_fingerprints": ["9C:C2:B1:2F:58:1F:E6:7E:DC:68:F9:74:63:5F:82:BE:33:4D:24:E1:87:51:CB:7F:8B:E2:E5:69:1B:67:F6:4E"]
-      }
-    }]
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.vercel.mydhikr.twa",
+      "sha256_cert_fingerprints": [
+        "70:34:1F:11:A2:B8:58:37:68:F4:00:46:B2:05:8C:D3:0D:DF:E9:5A:D1:3C:7A:7E:9C:38:46:4F:B2:47:AF:57",
+        "9C:C2:B1:2F:58:1F:E6:7E:DC:68:F9:74:63:5F:82:BE:33:4D:24:E1:87:51:CB:7F:8B:E2:E5:69:1B:67:F6:4E"
+      ]
+    }
+  }
+]
