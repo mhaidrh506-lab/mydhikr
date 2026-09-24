@@ -5172,6 +5172,16 @@ function renderRuqyah(){
   `;
 }
 // تمت إزالة تسجيل شاشة "ruqyah" المستقلة — أصبحت جزءًا من تاب "القرآن" (انظر screenRenderers.quran أعلاه)
+function waitForFbSync(ms){
+  return new Promise((resolve, reject) => {
+    if(window.__fbSync) return resolve(window.__fbSync);
+    const t0 = Date.now();
+    const iv = setInterval(() => {
+      if(window.__fbSync){ clearInterval(iv); resolve(window.__fbSync); }
+      else if(Date.now() - t0 > ms){ clearInterval(iv); reject(new Error('fbSync not ready')); }
+    }, 100);
+  });
+}
 const FORYOU_STATE = { videos: [], stats: {}, loading: false, loaded: false, error: false };
 async function loadForYouContent(force){
   if(FORYOU_STATE.loading) return;
@@ -5180,9 +5190,10 @@ async function loadForYouContent(force){
   FORYOU_STATE.error = false;
   if(DB.ui.tab === 'foryou') renderCurrentScreen();
   try{
+    const sync = await waitForFbSync(10000); // ننتظر خدمة Firebase تجهز بدل ما نفشل فورًا
     let _to;
     const timeout = new Promise((_, reject) => { _to = setTimeout(() => reject(new Error('timeout')), 8000); });
-    const data = await Promise.race([window.__fbSync.pull('foryou_content'), timeout]).finally(() => clearTimeout(_to));
+    const data = await Promise.race([sync.pull('foryou_content'), timeout]).finally(() => clearTimeout(_to));
     FORYOU_STATE.videos = (data && Array.isArray(data.videos)) ? data.videos : [];
     FORYOU_STATE.stats = (data && data.stats && typeof data.stats === 'object') ? data.stats : {};
     FORYOU_STATE.loaded = true;
