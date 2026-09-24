@@ -1679,22 +1679,78 @@ async function shareDhikrImage(mainText, subText){
   ctx.fillStyle = '#C9A23C';
   ctx.fillText(isEn() ? 'MyDhikr' : 'ذكر', W/2, H-100);
 
-  canvas.toBlob(async (blob)=>{
-    if(!blob){ toast(isEn()?'Could not create image':'تعذر إنشاء الصورة'); return; }
-    const file = new File([blob], 'dhikr.png', {type:'image/png'});
-    if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
-      try{
-        await navigator.share({files:[file], title: isEn()?'MyDhikr':'ذكر'});
-      }catch(e){}
-    }else{
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'dhikr.png';
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      setTimeout(()=>URL.revokeObjectURL(url), 4000);
-      toast(isEn()?'Image saved':'تم حفظ الصورة');
+  const blob = await new Promise(res=>{ try{ canvas.toBlob(res, 'image/png', 0.95); }catch(e){ res(null); } });
+  if(!blob){ toast(isEn()?'Could not create image':'تعذر إنشاء الصورة'); return; }
+  const file = new File([blob], 'dhikr.png', {type:'image/png'});
+  await shareFileSmart(file, blob);
+}
+
+/* ===== مساعدات المشاركة والحفظ (v133) ===== */
+function saveBlobAs(blob, name){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 8000);
+}
+function canShareFiles(file){
+  try{ return !!(navigator.share && navigator.canShare && navigator.canShare({files:[file]})); }catch(e){ return false; }
+}
+async function shareFileSmart(file, blob){
+  const title = isEn()?'MyDhikr':'ذكر';
+  if(!canShareFiles(file)){
+    saveBlobAs(blob, file.name);
+    toast(isEn()?'Image saved':'تم حفظ الصورة');
+    return;
+  }
+  try{
+    await navigator.share({files:[file], title});
+  }catch(e){
+    if(e && e.name === 'AbortError') return; // المستخدم سكّر نافذة المشاركة
+    // غالبًا انتهت صلاحية "نقرة المستخدم" أثناء تجهيز الصورة → نطلب نقرة جديدة
+    showShareReady(file, blob);
+  }
+}
+function showShareReady(file, blob){
+  const old = document.getElementById('share-ready-modal');
+  if(old) old.remove();
+  const modal = document.createElement('div');
+  modal.id = 'share-ready-modal';
+  modal.className = 'page-jump-modal';
+  modal.innerHTML = `
+    <div class="page-jump-box">
+      <div class="page-jump-title">${isEn()?'Image is ready':'الصورة جاهزة ✨'}</div>
+      <div class="page-jump-row">
+        <button id="share-ready-go">${isEn()?'Share':'مشاركة'}</button>
+        <button id="share-ready-save">${isEn()?'Save':'حفظ'}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.remove(); });
+  document.getElementById('share-ready-go').onclick = async ()=>{
+    try{ await navigator.share({files:[file], title: isEn()?'MyDhikr':'ذكر'}); modal.remove(); }
+    catch(e){
+      if(e && e.name === 'AbortError'){ modal.remove(); return; }
+      saveBlobAs(blob, file.name); modal.remove();
+      toast(isEn()?'Sharing unavailable — image saved':'المشاركة غير متاحة، تم حفظ الصورة');
     }
-  }, 'image/png', 0.95);
+  };
+  document.getElementById('share-ready-save').onclick = ()=>{
+    saveBlobAs(blob, file.name); modal.remove();
+    toast(isEn()?'Image saved':'تم حفظ الصورة');
+  };
+}
+async function shareTextSmart(text, copiedMsg){
+  if(navigator.share){
+    try{ await navigator.share({text}); return; }
+    catch(e){ if(e && e.name === 'AbortError') return; }
+  }
+  try{
+    await navigator.clipboard.writeText(text);
+    toast(copiedMsg || (isEn()?'Copied':'تم النسخ'));
+  }catch(e){
+    toast(isEn()?'Could not share':'تعذر المشاركة');
+  }
 }
 
 function applyFontScale(){
@@ -4073,13 +4129,10 @@ async function quranShareAyah(num, ayahNum){
     const text = s.ayahs[ayahNum-1];
     const meta = SURAHS.find(x=>x[0]===num);
     const shareText = `${text}\n\n(${isEn()?'Surah':'سورة'} ${meta?meta[1]:num} : ${toArabicDigits(ayahNum)})`;
-    if(navigator.share){
-      await navigator.share({text: shareText});
-    }else if(navigator.clipboard){
-      await navigator.clipboard.writeText(shareText);
-      toast(isEn()?'Copied':'تم نسخ الآية');
-    }
-  }catch(e){}
+    await shareTextSmart(shareText, isEn()?'Copied':'تم نسخ الآية');
+  }catch(e){
+    toast(isEn()?'Could not share':'تعذر المشاركة');
+  }
 }
 function quranRefreshBookmarkMarks(){
   document.querySelectorAll('.num-badge[id^="mark-"]').forEach(el=>{
@@ -5255,32 +5308,31 @@ function updateForYouBadge(){
   }
 }
 async function foryouDownload(url){
+  toast(isEn() ? 'Downloading…' : 'جاري التنزيل…');
   try{
-    toast(isEn() ? 'Downloading…' : 'جاري التنزيل…');
-    const res = await fetch(url);
+    const res = await fetch(url, {mode:'cors'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
     const blob = await res.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = blobUrl;
-    a.download = 'mydhikr-video.mp4';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 4000);
+    saveBlobAs(blob, 'mydhikr-video.mp4');
+    toast(isEn() ? 'Video saved' : 'تم حفظ الفيديو');
   }catch(e){
-    toast(isEn() ? 'Download failed' : 'تعذر تنزيل الفيديو');
+    // لو التخزين ما يسمح بالتحميل المباشر (CORS)، نفتح الفيديو نفسه
+    const a = document.createElement('a');
+    a.href = url; a.target = '_blank'; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+    toast(isEn() ? 'Opened the video — use ⋮ → Download' : 'انفتح الفيديو — اضغط ⋮ ثم تنزيل');
   }
 }
 async function foryouShare(url){
   if(navigator.share){
-    try{ await navigator.share({ url, title: 'MyDhikr' }); }catch(e){}
-  }else{
-    try{
-      await navigator.clipboard.writeText(url);
-      toast(isEn() ? 'Link copied' : 'تم نسخ الرابط');
-    }catch(e){
-      toast(isEn() ? 'Could not share' : 'تعذر المشاركة');
-    }
+    try{ await navigator.share({ url, title: 'MyDhikr' }); return; }
+    catch(e){ if(e && e.name === 'AbortError') return; }
+  }
+  try{
+    await navigator.clipboard.writeText(url);
+    toast(isEn() ? 'Link copied' : 'تم نسخ الرابط');
+  }catch(e){
+    toast(isEn() ? 'Could not share' : 'تعذر المشاركة');
   }
 }
 
