@@ -6,6 +6,15 @@
 <meta name="theme-color" content="#173D2F">
 <meta name="description" content="ذكر — تطبيق الأذكار، السبحة الذكية، مواقيت الصلاة، القرآن الكريم والقبلة">
 <title>ذكر</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ذكر">
+<meta property="og:title" content="ذكر — أذكار وقرآن وتسبيح">
+<meta property="og:description" content="أذكار حصن المسلم، عدّاد تسبيح، القرآن كاملًا ومقاطع إيمانية — حمّله مجانًا">
+<meta property="og:image" content="https://mydhikr.vercel.app/icons/icon-512.png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta property="og:url" content="https://mydhikr.vercel.app/">
+<meta name="twitter:card" content="summary">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
@@ -1726,15 +1735,17 @@ async function shareFileSmart(file, blob){
     showShareReady(file, blob);
   }
 }
-function showShareReady(file, blob){
+function showShareReady(file, blob, opts){
+  opts = opts || {};
   const old = document.getElementById('share-ready-modal');
   if(old) old.remove();
+  const data = {files:[file], title: isEn()?'MyDhikr':'ذكر', text: opts.text || shareCaption()};
   const modal = document.createElement('div');
   modal.id = 'share-ready-modal';
   modal.className = 'page-jump-modal';
   modal.innerHTML = `
     <div class="page-jump-box">
-      <div class="page-jump-title">${isEn()?'Image is ready':'الصورة جاهزة ✨'}</div>
+      <div class="page-jump-title">${opts.label || (isEn()?'Image is ready':'الصورة جاهزة ✨')}</div>
       <div class="page-jump-row">
         <button id="share-ready-go">${isEn()?'Share':'مشاركة'}</button>
         <button id="share-ready-save">${isEn()?'Save':'حفظ'}</button>
@@ -1743,16 +1754,16 @@ function showShareReady(file, blob){
   document.body.appendChild(modal);
   modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.remove(); });
   document.getElementById('share-ready-go').onclick = async ()=>{
-    try{ await navigator.share({files:[file], title: isEn()?'MyDhikr':'ذكر', text: shareCaption()}); modal.remove(); }
+    try{ await navigator.share(data); modal.remove(); }
     catch(e){
       if(e && e.name === 'AbortError'){ modal.remove(); return; }
       saveBlobAs(blob, file.name); modal.remove();
-      toast(isEn()?'Sharing unavailable — image saved':'المشاركة غير متاحة، تم حفظ الصورة');
+      toast(isEn()?'Sharing unavailable — saved instead':'المشاركة غير متاحة، تم الحفظ');
     }
   };
   document.getElementById('share-ready-save').onclick = ()=>{
     saveBlobAs(blob, file.name); modal.remove();
-    toast(isEn()?'Image saved':'تم حفظ الصورة');
+    toast(isEn()?'Saved':'تم الحفظ');
   };
 }
 async function shareTextSmart(text, copiedMsg){
@@ -5169,8 +5180,9 @@ async function loadForYouContent(force){
   FORYOU_STATE.error = false;
   if(DB.ui.tab === 'foryou') renderCurrentScreen();
   try{
-    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000));
-    const data = await Promise.race([window.__fbSync.pull('foryou_content'), timeout]);
+    let _to;
+    const timeout = new Promise((_, reject) => { _to = setTimeout(() => reject(new Error('timeout')), 8000); });
+    const data = await Promise.race([window.__fbSync.pull('foryou_content'), timeout]).finally(() => clearTimeout(_to));
     FORYOU_STATE.videos = (data && Array.isArray(data.videos)) ? data.videos : [];
     FORYOU_STATE.stats = (data && data.stats && typeof data.stats === 'object') ? data.stats : {};
     FORYOU_STATE.loaded = true;
@@ -5564,19 +5576,85 @@ function foryouVideoLink(id, url){
   const base = location.origin + '/';
   return id ? `${base}?v=${encodeURIComponent(id)}` : `${base}?vu=${encodeURIComponent(url)}`;
 }
+const SHARE_VIDEO_MAX_BYTES = 45 * 1024 * 1024; // الأكبر من كذا نرسل الرابط بس
 async function foryouShare(id, url){
   const link = foryouVideoLink(id, url);
-  const text = isEn() ? 'Watch this clip on MyDhikr 👇' : 'شاهد هذا المقطع في تطبيق ذكر 👇';
+  const caption = isEn()
+    ? `🎬 Watch more on the MyDhikr app 👇\n${link}`
+    : `🎬 شاهد المزيد في تطبيق ذكر 👇\n${link}`;
+
+  // 1) نحاول نرسل المقطع نفسه (يظهر كفيديو بواتساب) مع الرابط كتعليق
+  if(navigator.share && navigator.canShare){
+    showBrandProgress(0, isEn() ? 'Preparing clip…' : 'جاري تجهيز المقطع…');
+    let file = null, blob = null;
+    try{
+      const res = await fetch(url, {mode:'cors'});
+      if(res.ok){
+        blob = await res.blob();
+        if(blob.size <= SHARE_VIDEO_MAX_BYTES){
+          const f = new File([blob], 'mydhikr-video.mp4', {type: blob.type || 'video/mp4'});
+          if(canShareFiles(f)) file = f;
+        }
+      }
+    }catch(e){}
+    hideBrandProgress();
+    if(file){
+      try{ await navigator.share({files:[file], title: isEn()?'MyDhikr':'ذكر', text: caption}); return; }
+      catch(e){
+        if(e && e.name === 'AbortError') return;
+        showShareReady(file, blob, {text: caption, label: isEn()?'Clip is ready':'المقطع جاهز 🎬'});
+        return;
+      }
+    }
+  }
+
+  // 2) احتياط: نرسل الرابط بس
   if(navigator.share){
-    try{ await navigator.share({ title: isEn() ? 'MyDhikr' : 'ذكر', text, url: link }); return; }
+    try{ await navigator.share({ title: isEn() ? 'MyDhikr' : 'ذكر', text: caption }); return; }
     catch(e){ if(e && e.name === 'AbortError') return; }
   }
   try{
-    await navigator.clipboard.writeText(`${text}\n${link}`);
+    await navigator.clipboard.writeText(caption);
     toast(isEn() ? 'Link copied' : 'تم نسخ الرابط');
   }catch(e){
     toast(isEn() ? 'Could not share' : 'تعذر المشاركة');
   }
+}
+
+/* ===== فتح رابط المقطع: بالتطبيق لو مثبّت، وإلا Google Play ===== */
+function isAndroid(){ return /android/i.test(navigator.userAgent); }
+function isInAppContext(){
+  try{
+    if(document.referrer && document.referrer.indexOf('android-app://') === 0) sessionStorage.setItem('inApp', '1');
+    return sessionStorage.getItem('inApp') === '1'
+      || window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone === true;
+  }catch(e){ return false; }
+}
+function appIntentUrl(dl){
+  const q = dl.id ? `v=${encodeURIComponent(dl.id)}` : `vu=${encodeURIComponent(dl.url)}`;
+  return `intent://mydhikr.vercel.app/?${q}#Intent;scheme=https;package=app.vercel.mydhikr.twa;`
+       + `S.browser_fallback_url=${encodeURIComponent(PLAY_STORE_URL)};end`;
+}
+function showOpenInAppPrompt(dl){
+  if(document.getElementById('open-app-modal')) return;
+  const m = document.createElement('div');
+  m.id = 'open-app-modal';
+  m.className = 'page-jump-modal';
+  m.innerHTML = `
+    <div class="page-jump-box" style="text-align:center; width:270px;">
+      <img src="icons/icon-192.png" alt="" style="width:64px; height:64px; border-radius:16px; margin-bottom:10px;">
+      <div class="page-jump-title">${isEn() ? 'Watch in the MyDhikr app' : 'شاهد المقطع في تطبيق ذكر'}</div>
+      <div style="font-size:12.5px; opacity:.75; margin:6px 0 14px;">${isEn() ? "If you don't have the app, you'll be taken to Google Play" : 'لو ما عندك التطبيق بيفتح لك Google Play'}</div>
+      <div class="page-jump-row" style="flex-direction:column; gap:8px;">
+        <button id="open-app-go" style="padding:11px 16px;">${isEn() ? 'Open in app' : 'افتح في التطبيق'}</button>
+        <button id="open-app-stay" style="padding:9px 16px; background:transparent; color:inherit; opacity:.7;">${isEn() ? 'Continue in browser' : 'أكمل في المتصفح'}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  document.getElementById('open-app-go').onclick = () => { location.href = appIntentUrl(dl); };
+  document.getElementById('open-app-stay').onclick = () => m.remove();
+  m.addEventListener('click', (e) => { if(e.target === m) m.remove(); });
 }
 
 function toggleForYouMute(){
@@ -6197,7 +6275,14 @@ function readVideoDeepLink(){
 }
 function bootApp(){
   forceHomeTab();
-  if(readVideoDeepLink()){ DB.ui.tab = 'foryou'; saveDB(); }
+  const inApp = isInAppContext();
+  if(readVideoDeepLink()){
+    DB.ui.tab = 'foryou'; saveDB();
+    if(!inApp && isAndroid()){
+      const dl = Object.assign({}, _foryouDeepLink);
+      setTimeout(() => showOpenInAppPrompt(dl), 1000);
+    }
+  }
   applyTheme();
   applyLangDir();
   renderShell();
