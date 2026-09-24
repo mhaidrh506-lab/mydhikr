@@ -45,7 +45,7 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-html,body{margin:0;padding:0;height:100%;height:-webkit-fill-available;background:var(--ivory); overflow-x:hidden;}
+html,body{margin:0;padding:0;height:100%;background:var(--ivory); overflow-x:hidden;}
 body{
   font-family:'Tajawal', system-ui, sans-serif;
   color:var(--text);
@@ -63,18 +63,9 @@ button{font-family:inherit;}
   margin:0 auto;
   min-height:100vh;
   min-height:100dvh;
-  min-height:-webkit-fill-available;
   background:linear-gradient(180deg, var(--ivory-top) 0%, var(--ivory) 320px);
   position:relative;
   padding-bottom:calc(84px + var(--safe-bottom));
-  display:flex;
-  flex-direction:column;
-}
-#screens{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  min-height:0;
 }
 
 .screen{display:none; animation:fadeIn .28s ease;}
@@ -683,7 +674,6 @@ html[data-theme="thikr"] .adhkar-focus-counter .count-big.done{ color:var(--gold
 .adhkar-reader-header{
   display:flex; align-items:center; justify-content:space-between;
   padding:calc(18px + var(--safe-top)) 20px 6px;
-  flex-shrink:0;
 }
 .adhkar-reader-icon-btn{
   background:none; border:none; color:var(--green-800); font-size:20px; line-height:1;
@@ -695,8 +685,6 @@ html[data-theme="thikr"] .adhkar-reader-icon-btn{ color:var(--mint); }
 .adhkar-reader-stage{
   display:flex; flex-direction:column; justify-content:flex-start;
   padding-top:28px;
-  flex:1;
-  cursor:pointer;
 }
 .adhkar-reader-body{padding:20px 16px 8px;}
 .adhkar-reader-card{
@@ -727,10 +715,10 @@ html[data-theme="thikr"] .adhkar-reader-bismillah{ color:var(--mint); }
 html[data-theme="dark"] .adhkar-reader-divider{ background:rgba(255,255,255,.08); }
 html[data-theme="thikr"] .adhkar-reader-divider{ background:rgba(255,255,255,.08); }
 .adhkar-reader-reps{
-  text-align:center; color:#3B82F6; font-size:13px; font-weight:600;
+  text-align:center; color:var(--text-muted); font-size:13px;
 }
 .adhkar-reader-note{
-  text-align:center; color:#3B82F6; font-size:12.5px;
+  text-align:center; color:var(--text-muted); font-size:12.5px;
   margin-top:8px; line-height:1.7; opacity:.85;
 }
 .adhkar-reader-toolbar{
@@ -747,37 +735,16 @@ html[data-theme="thikr"] .adhkar-reader-divider{ background:rgba(255,255,255,.08
 }
 .art-btn.active{color:var(--gold-600);}
 .art-speed{font-size:13px; font-weight:800;}
-.art-counter-wrap{
-  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-  width:60px; height:60px; display:flex; align-items:center; justify-content:center;
-}
-.art-counter-ring{ position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); pointer-events:none; }
-.art-counter-ring circle{ fill:none; stroke-width:3; }
-.art-counter-ring circle.bg{ stroke:var(--green-50); }
-.art-counter-ring circle.fg{
-  stroke:var(--gold-500); stroke-linecap:round;
-  stroke-dasharray:var(--dash); stroke-dashoffset:var(--dashoff);
-  transition:stroke-dashoffset .35s ease;
-}
 .art-counter{
-  position:relative; z-index:1;
-  width:44px; height:44px; border-radius:50%; border:none;
-  background:linear-gradient(155deg, var(--surface) 0%, var(--green-50) 100%);
-  color:var(--green-800); font-weight:900; font-size:16px;
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:40px; height:40px; border-radius:50%; border:2px solid var(--green-100);
+  background:var(--surface); color:var(--green-800); font-weight:900; font-size:15px;
   display:flex; align-items:center; justify-content:center; cursor:pointer;
-  box-shadow:0 3px 10px rgba(0,0,0,.14), inset 0 1px 0 rgba(255,255,255,.5);
-  transition:transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease, background .3s ease;
 }
-.art-counter:active{ transform:scale(.9); }
-.art-counter.done{
-  background:linear-gradient(155deg, var(--gold-300) 0%, var(--gold-500) 100%);
-  color:var(--green-900);
-  box-shadow:0 4px 16px rgba(203,154,52,.45), inset 0 1px 0 rgba(255,255,255,.55);
-}
+.art-counter.done{border-color:var(--gold-300); color:var(--gold-600);}
 .art-play{color:var(--green-800);}
 html[data-theme="dark"] .art-counter{ color:var(--mint); }
 html[data-theme="thikr"] .art-counter{ color:var(--mint); }
-html[data-theme="dark"] .art-counter.done, html[data-theme="thikr"] .art-counter.done{ color:var(--green-900); }
 html[data-theme="dark"] .art-play{ color:var(--mint); }
 html[data-theme="thikr"] .art-play{ color:var(--mint); }
 .bar{height:6px; border-radius:3px; background:var(--green-50); overflow:hidden;}
@@ -3638,9 +3605,9 @@ function renderAdhkarDetail(){
   const isFav = adhkarIsFav(item.id);
 
   return header + `
-    <div class="adhkar-reader-stage" onclick="adhkarFocusTap('${cat}')">
+    <div class="adhkar-reader-stage">
       <div class="adhkar-reader-body">
-        <div class="adhkar-reader-card">
+        <div class="adhkar-reader-card" onclick="adhkarFocusTap('${cat}')">
           ${isSurah ? `<div class="adhkar-reader-bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>` : ''}
           <div class="adhkar-reader-text">${item.text}</div>
           ${citation ? `<div class="adhkar-reader-citation">(${citation})</div>` : ''}
@@ -3651,52 +3618,19 @@ function renderAdhkarDetail(){
       </div>
       <div class="adhkar-reader-toolbar">
         <div class="art-side">
-          <button class="art-btn" onclick="event.stopPropagation(); adhkarShareCurrent()" aria-label="share">${shareUpIcon(18)}</button>
-          <button class="art-btn art-play" onclick="event.stopPropagation(); adhkarTogglePlay()" aria-label="play">${_adhkarSpeaking ? pauseFilledIcon(18) : playFilledIcon(18)}</button>
-          <button class="art-btn art-speed" onclick="event.stopPropagation(); adhkarCycleSpeed()" aria-label="speed">${_adhkarSpeed}x</button>
+          <button class="art-btn" onclick="adhkarShareCurrent()" aria-label="share">${shareUpIcon(18)}</button>
+          <button class="art-btn art-play" onclick="adhkarTogglePlay()" aria-label="play">${_adhkarSpeaking ? pauseFilledIcon(18) : playFilledIcon(18)}</button>
+          <button class="art-btn art-speed" onclick="adhkarCycleSpeed()" aria-label="speed">${_adhkarSpeed}x</button>
         </div>
-        <div class="art-counter-wrap">
-          <svg class="art-counter-ring" viewBox="0 0 60 60">
-            <circle class="bg" cx="30" cy="30" r="26"></circle>
-            <circle class="fg" cx="30" cy="30" r="26" style="--dash:163.4; --dashoff:${163.4 - (163.4 * ((item.reps - remaining) / Math.max(item.reps,1)))}"></circle>
-          </svg>
-          <button class="art-counter ${remaining===0?'done':''}" onclick="event.stopPropagation(); adhkarFocusTap('${cat}')" aria-label="count">${remaining}</button>
-        </div>
+        <button class="art-counter ${remaining===0?'done':''}" onclick="adhkarFocusTap('${cat}')" aria-label="count">${remaining}</button>
         <div class="art-side">
-          <button class="art-btn" onclick="event.stopPropagation(); adhkarFocusReset('${cat}')" aria-label="reset">${resetIcon(17)}</button>
-          <button class="art-btn ${isFav?'active':''}" onclick="event.stopPropagation(); adhkarToggleFav('${item.id}')" aria-label="favorite">${favIcon(18, isFav)}</button>
+          <button class="art-btn" onclick="adhkarFocusReset('${cat}')" aria-label="reset">${resetIcon(17)}</button>
+          <button class="art-btn ${isFav?'active':''}" onclick="adhkarToggleFav('${item.id}')" aria-label="favorite">${favIcon(18, isFav)}</button>
           <div class="art-progress">${idx+1}/${items.length}</div>
         </div>
       </div>
     </div>
   `;
-}
-function adhkarSlideInAfterChange(goingNext, applyFn){
-  applyFn();
-  renderCurrentScreen();
-  requestAnimationFrame(()=>{
-    const newCard = document.querySelector('.adhkar-reader-card');
-    if(newCard){
-      const vw = window.innerWidth || 400;
-      newCard.style.transition = 'none';
-      newCard.style.transform = `translateX(${goingNext ? -vw*0.35 : vw*0.35}px)`;
-      newCard.style.opacity = '0';
-      requestAnimationFrame(()=>{
-        newCard.style.transition = 'transform .25s ease, opacity .25s ease';
-        newCard.style.transform = 'translateX(0)';
-        newCard.style.opacity = '1';
-      });
-    }
-  });
-}
-function adhkarSlideTo(goingNext, applyFn){
-  const card = document.querySelector('.adhkar-reader-card');
-  if(!card){ applyFn(); renderCurrentScreen(); return; }
-  const vw = window.innerWidth || 400;
-  card.style.transition = 'transform .25s ease, opacity .25s ease';
-  card.style.transform = `translateX(${goingNext ? vw : -vw}px)`;
-  card.style.opacity = '0';
-  setTimeout(()=>{ adhkarSlideInAfterChange(goingNext, applyFn); }, 200);
 }
 function adhkarFocusTap(cat){
   const items = ADHKAR_DATA[cat];
@@ -3707,9 +3641,6 @@ function adhkarFocusTap(cat){
   state[item.id]--;
   vibrate(10);
   const justFinished = state[item.id] === 0;
-  if(justFinished && idx === items.length - 1){
-    items.forEach(it => { state[it.id] = 0; });
-  }
   if(justFinished && adhkarCatDone(cat)){
     if(!DB.stats.categoryDoneLog) DB.stats.categoryDoneLog = {};
     if(!DB.stats.categoryDoneLog[cat]) DB.stats.categoryDoneLog[cat] = [];
@@ -3722,19 +3653,20 @@ function adhkarFocusTap(cat){
     setTimeout(()=>{
       if(DB.ui.tab==='adhkar' && DB.ui.adhkarView==='detail' && _adhkarIndex===idx){
         adhkarStopSpeech();
-        adhkarSlideTo(true, ()=>{ _adhkarIndex = idx + 1; });
+        _adhkarIndex = idx + 1;
+        renderCurrentScreen();
       }
     }, 550);
   }
 }
 function adhkarFocusPrev(){
   adhkarStopSpeech();
-  if(_adhkarIndex > 0){ adhkarSlideTo(false, ()=>{ _adhkarIndex--; }); }
+  if(_adhkarIndex > 0){ _adhkarIndex--; renderCurrentScreen(); }
 }
 function adhkarFocusNext(cat){
   adhkarStopSpeech();
   const items = ADHKAR_DATA[cat];
-  if(_adhkarIndex < items.length-1){ adhkarSlideTo(true, ()=>{ _adhkarIndex++; }); }
+  if(_adhkarIndex < items.length-1){ _adhkarIndex++; renderCurrentScreen(); }
 }
 function adhkarFocusReset(cat){
   adhkarStopSpeech();
@@ -3821,10 +3753,9 @@ function adhkarShowTOC(){
 }
 function adhkarJumpTo(idx){
   adhkarStopSpeech();
+  _adhkarIndex = idx;
   adhkarHideTOC();
-  if(DB.ui.tab !== 'adhkar'){ _adhkarIndex = idx; return; }
-  if(idx === _adhkarIndex){ renderCurrentScreen(); return; }
-  adhkarSlideTo(idx > _adhkarIndex, ()=>{ _adhkarIndex = idx; });
+  if(DB.ui.tab === 'adhkar') renderCurrentScreen();
 }
 function adhkarResetIfLeavingDetail(){
   if(DB.ui.tab === 'adhkar' && DB.ui.adhkarView === 'detail'){
@@ -3848,18 +3779,17 @@ let _adhkarDragStartY = null;
 let _adhkarDragLocked = null; // true = horizontal swipe, false = vertical scroll, null = undecided
 function after_adhkar(){
   const card = document.querySelector('.adhkar-reader-card');
-  const stage = document.querySelector('.adhkar-reader-stage');
-  if(!card || !stage) return;
+  if(!card) return;
   card.style.transform = '';
   card.style.opacity = '';
   card.style.transition = '';
-  stage.addEventListener('touchstart', (e)=>{
+  card.addEventListener('touchstart', (e)=>{
     _adhkarDragStartX = e.touches[0].clientX;
     _adhkarDragStartY = e.touches[0].clientY;
     _adhkarDragLocked = null;
     card.style.transition = 'none';
   }, {passive:true});
-  stage.addEventListener('touchmove', (e)=>{
+  card.addEventListener('touchmove', (e)=>{
     if(_adhkarDragStartX === null) return;
     const dx = e.touches[0].clientX - _adhkarDragStartX;
     const dy = e.touches[0].clientY - _adhkarDragStartY;
@@ -3872,7 +3802,7 @@ function after_adhkar(){
       card.style.opacity = String(Math.max(1 - Math.abs(dx)/280, 0.35));
     }
   }, {passive:false});
-  stage.addEventListener('touchend', (e)=>{
+  card.addEventListener('touchend', (e)=>{
     if(_adhkarDragStartX === null) return;
     const dx = e.changedTouches[0].clientX - _adhkarDragStartX;
     const wasHorizontal = _adhkarDragLocked;
@@ -3889,8 +3819,20 @@ function after_adhkar(){
         card.style.transform = `translateX(${dx > 0 ? vw : -vw}px)`;
         card.style.opacity = '0';
         setTimeout(()=>{
-          adhkarStopSpeech();
-          adhkarSlideInAfterChange(goingNext, ()=>{ if(goingNext) _adhkarIndex++; else _adhkarIndex--; });
+          if(goingNext) adhkarFocusNext(cat); else adhkarFocusPrev();
+          requestAnimationFrame(()=>{
+            const newCard = document.querySelector('.adhkar-reader-card');
+            if(newCard){
+              newCard.style.transition = 'none';
+              newCard.style.transform = `translateX(${dx > 0 ? -vw*0.35 : vw*0.35}px)`;
+              newCard.style.opacity = '0';
+              requestAnimationFrame(()=>{
+                newCard.style.transition = 'transform .25s ease, opacity .25s ease';
+                newCard.style.transform = 'translateX(0)';
+                newCard.style.opacity = '1';
+              });
+            }
+          });
         }, 200);
         return;
       }
