@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#173D2F">
-<meta name="color-scheme" id="meta-color-scheme" content="only light">
+<meta name="color-scheme" id="meta-color-scheme" content="light dark">
 <meta name="description" content="ذكر — تطبيق الأذكار، السبحة الذكية، مواقيت الصلاة، القرآن الكريم والقبلة">
 <title>ذكر</title>
 <meta property="og:type" content="website">
@@ -33,6 +33,10 @@ html{ color-scheme: only light; }
 /* منع تكبير الشاشة بإصبعين أو بالنقر المزدوج */
 html, body{ touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 html[data-theme="dark"], html[data-theme="thikr"]{ color-scheme: only dark; }
+/* إشارة لسامسونج إنترنت وChrome إن الصفحة تدير الوضع الليلي بنفسها، فما يفرضون تعتيم */
+@media (prefers-color-scheme: dark){
+  html[data-theme="light"], html[data-theme="light"] body{ background:var(--ivory); color:var(--text); }
+}
 
 :root{
   --ivory:#FBF8F2;
@@ -1590,7 +1594,7 @@ function applyTheme(){
   document.documentElement.setAttribute('data-theme', mode);
   const isDark = (mode === 'dark' || mode === 'thikr');
   const m = document.getElementById('meta-color-scheme');
-  if(m) m.setAttribute('content', isDark ? 'only dark' : 'only light');
+  if(m) m.setAttribute('content', 'light dark'); // ثابت: يمنع التعتيم الإجباري، والثيم يحدده CSS
 }
 function settingsSetTheme(mode){
   DB.settings.themeMode = mode;
