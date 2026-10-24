@@ -1301,6 +1301,7 @@ function loadDB(){
   };
 }
 const APP_VERSION = '1.0.0';
+const CACHE_TAG = 'v147';
 let DB = loadDB();
 if(!DB.settings.lang) DB.settings.lang = 'ar';
 if(!DB.quran) DB.quran = {lastRead:null, bookmark:null};
@@ -6229,9 +6230,22 @@ function renderSettings(){
     <div style="text-align:center; font-size:11.5px; color:var(--text-muted); margin-top:8px; cursor:default; user-select:none;" onclick="versionTapTrigger()">
       ${t('app_version')}: ${APP_VERSION}
     </div>
+    <div style="text-align:center; font-size:10.5px; color:var(--text-soft); margin-top:4px; direction:ltr;">
+      ${themeDiagText()}
+    </div>
   `;
 }
 screenRenderers.settings = renderSettings;
+function themeDiagText(){
+  const ua = navigator.userAgent;
+  const br = /SamsungBrowser/i.test(ua) ? 'Samsung Internet'
+           : /EdgA/i.test(ua) ? 'Edge'
+           : /OPR|Opera/i.test(ua) ? 'Opera'
+           : /Firefox/i.test(ua) ? 'Firefox'
+           : /Chrome/i.test(ua) ? 'Chrome' : 'Other';
+  const sysDark = !!(_sysDarkMQ && _sysDarkMQ.matches);
+  return `${br} · sys:${sysDark?'dark':'light'} · theme:${effectiveTheme()}${DB.settings.themeAuto?' (auto)':''} · ${CACHE_TAG}`;
+}
 
 /* ============================== BOOTSTRAP ============================== */
 function showUpdateBanner(){
