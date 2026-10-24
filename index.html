@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#173D2F">
 <meta name="color-scheme" id="meta-color-scheme" content="only light">
 <meta name="description" content="ذكر — تطبيق الأذكار، السبحة الذكية، مواقيت الصلاة، القرآن الكريم والقبلة">
@@ -30,6 +30,8 @@
 <style>
 /* التطبيق يتحكم بألوانه بنفسه — بدون تأثير وضع الجوال الليلي/النهاري */
 html{ color-scheme: only light; }
+/* منع تكبير الشاشة بإصبعين أو بالنقر المزدوج */
+html, body{ touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 html[data-theme="dark"], html[data-theme="thikr"]{ color-scheme: only dark; }
 
 :root{
@@ -1788,6 +1790,12 @@ async function shareTextSmart(text, copiedMsg){
   }
 }
 
+// iOS Safari يتجاهل user-scalable=no، فنمنع الزوم يدويًا
+['gesturestart','gesturechange','gestureend'].forEach(ev =>
+  document.addEventListener(ev, e => e.preventDefault(), {passive:false}));
+document.addEventListener('touchmove', e => {
+  if(e.touches && e.touches.length > 1) e.preventDefault();
+}, {passive:false});
 function applyFontScale(){
   const el = document.getElementById('app');
   if(el) el.style.zoom = DB.settings.fontScale || 1;
