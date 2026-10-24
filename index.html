@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#173D2F">
+<meta name="color-scheme" id="meta-color-scheme" content="only light">
 <meta name="description" content="ذكر — تطبيق الأذكار، السبحة الذكية، مواقيت الصلاة، القرآن الكريم والقبلة">
 <title>ذكر</title>
 <meta property="og:type" content="website">
@@ -27,6 +28,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
 <style>
+/* التطبيق يتحكم بألوانه بنفسه — بدون تأثير وضع الجوال الليلي/النهاري */
+html{ color-scheme: only light; }
+html[data-theme="dark"], html[data-theme="thikr"]{ color-scheme: only dark; }
+
 :root{
   --ivory:#FBF8F2;
   --surface:#EDEAE1;
@@ -1567,7 +1572,7 @@ async function syncPullSilent(code){
   }
 }
 if(typeof DB.settings.darkMode !== 'boolean'){
-  DB.settings.darkMode = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  DB.settings.darkMode = false; // ما نقرأ وضع الجوال؛ المستخدم يختار الثيم من الإعدادات
   saveDB();
 }
 if(!DB.settings.themeMode){
@@ -1579,7 +1584,11 @@ if(!DB.settings.tasbihStyle) DB.settings.tasbihStyle = 'electronic';
 if(DB.settings.tasbihVibrate === undefined) DB.settings.tasbihVibrate = true;
 if(DB.settings.tasbihStyle === 'blackring') DB.settings.tasbihStyle = 'electronic';
 function applyTheme(){
-  document.documentElement.setAttribute('data-theme', DB.settings.themeMode);
+  const mode = DB.settings.themeMode;
+  document.documentElement.setAttribute('data-theme', mode);
+  const isDark = (mode === 'dark' || mode === 'thikr');
+  const m = document.getElementById('meta-color-scheme');
+  if(m) m.setAttribute('content', isDark ? 'only dark' : 'only light');
 }
 function settingsSetTheme(mode){
   DB.settings.themeMode = mode;
