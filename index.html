@@ -6261,8 +6261,25 @@ if('serviceWorker' in navigator){
           }
         });
       });
+      reg.update().catch(()=>{});
       setInterval(()=>{ reg.update().catch(()=>{}); }, 60000);
+      document.addEventListener('visibilitychange', ()=>{
+        if(!document.hidden) reg.update().catch(()=>{});
+      });
     }).catch(()=>{});
+    // لما تتفعّل نسخة جديدة، نعيد تحميل الصفحة مرة وحدة تلقائيًا
+    const hadController = !!navigator.serviceWorker.controller;
+    let _reloaded = false;
+    const _loadedAt = Date.now();
+    navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+      if(!hadController || _reloaded) return;
+      const doReload = ()=>{ if(_reloaded) return; _reloaded = true; location.reload(); };
+      // أول ١٥ ثانية من الفتح نحدّث فورًا؛ بعدها ننتظر لين يرجع المستخدم للتطبيق عشان ما نقاطعه
+      if(Date.now() - _loadedAt < 15000 || document.hidden) doReload();
+      else document.addEventListener('visibilitychange', function h(){
+        if(!document.hidden){ document.removeEventListener('visibilitychange', h); doReload(); }
+      });
+    });
   });
 }
 
