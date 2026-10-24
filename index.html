@@ -1589,14 +1589,31 @@ if(!DB.settings.fontScale) DB.settings.fontScale = 1;
 if(!DB.settings.tasbihStyle) DB.settings.tasbihStyle = 'electronic';
 if(DB.settings.tasbihVibrate === undefined) DB.settings.tasbihVibrate = true;
 if(DB.settings.tasbihStyle === 'blackring') DB.settings.tasbihStyle = 'electronic';
+if(DB.settings.themeAuto === undefined){ DB.settings.themeAuto = true; saveDB(); }
+const _sysDarkMQ = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+function effectiveTheme(){
+  if(DB.settings.themeAuto) return (_sysDarkMQ && _sysDarkMQ.matches) ? 'dark' : 'light';
+  return DB.settings.themeMode || 'light';
+}
+if(_sysDarkMQ){
+  const _onSys = ()=>{ if(DB.settings.themeAuto){ applyTheme(); renderCurrentScreen(); } };
+  if(_sysDarkMQ.addEventListener) _sysDarkMQ.addEventListener('change', _onSys);
+  else if(_sysDarkMQ.addListener) _sysDarkMQ.addListener(_onSys);
+}
 function applyTheme(){
-  const mode = DB.settings.themeMode;
+  const mode = effectiveTheme();
   document.documentElement.setAttribute('data-theme', mode);
   const isDark = (mode === 'dark' || mode === 'thikr');
   const m = document.getElementById('meta-color-scheme');
   if(m) m.setAttribute('content', 'light dark'); // ثابت: يمنع التعتيم الإجباري، والثيم يحدده CSS
 }
 function settingsSetTheme(mode){
+  if(mode === 'auto'){
+    DB.settings.themeAuto = true;
+    saveDB(); applyTheme(); renderCurrentScreen();
+    return;
+  }
+  DB.settings.themeAuto = false;
   DB.settings.themeMode = mode;
   DB.settings.darkMode = (mode === 'dark');
   saveDB();
@@ -6051,13 +6068,16 @@ function renderSettings(){
         <div class="lbl" style="margin-bottom:2px;">${t('theme_label')}</div>
         <div class="hint" style="margin-bottom:12px;">${t('theme_hint')}</div>
         <div style="display:flex; gap:8px;">
-          <button onclick="settingsSetTheme('light')" style="flex:1; padding:12px 6px; border-radius:12px; border:1.5px solid ${s.themeMode==='light'?'var(--gold-500)':'var(--tabbar-border)'}; background:${s.themeMode==='light'?'var(--gold-100)':'transparent'}; color:var(--text); cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; font-family:inherit;">
+          <button onclick="settingsSetTheme('auto')" style="flex:1; padding:12px 6px; border-radius:12px; border:1.5px solid ${s.themeAuto?'var(--gold-500)':'var(--tabbar-border)'}; background:${s.themeAuto?'var(--gold-100)':'transparent'}; color:var(--text); cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; font-family:inherit;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg><span style="font-size:12px; font-weight:700;">${isEn()?'Auto':'تلقائي'}</span>
+          </button>
+          <button onclick="settingsSetTheme('light')" style="flex:1; padding:12px 6px; border-radius:12px; border:1.5px solid ${(!s.themeAuto && s.themeMode==='light')?'var(--gold-500)':'var(--tabbar-border)'}; background:${(!s.themeAuto && s.themeMode==='light')?'var(--gold-100)':'transparent'}; color:var(--text); cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; font-family:inherit;">
             ${sunIcon(20)}<span style="font-size:12px; font-weight:700;">${t('theme_light')}</span>
           </button>
-          <button onclick="settingsSetTheme('dark')" style="flex:1; padding:12px 6px; border-radius:12px; border:1.5px solid ${s.themeMode==='dark'?'var(--gold-500)':'var(--tabbar-border)'}; background:${s.themeMode==='dark'?'var(--gold-100)':'transparent'}; color:var(--text); cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; font-family:inherit;">
+          <button onclick="settingsSetTheme('dark')" style="flex:1; padding:12px 6px; border-radius:12px; border:1.5px solid ${(!s.themeAuto && s.themeMode==='dark')?'var(--gold-500)':'var(--tabbar-border)'}; background:${(!s.themeAuto && s.themeMode==='dark')?'var(--gold-100)':'transparent'}; color:var(--text); cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; font-family:inherit;">
             ${moonIcon(20)}<span style="font-size:12px; font-weight:700;">${t('theme_dark')}</span>
           </button>
-          <button onclick="settingsSetTheme('thikr')" style="flex:1; padding:12px 6px; border-radius:12px; border:1.5px solid ${s.themeMode==='thikr'?'var(--gold-500)':'var(--tabbar-border)'}; background:${s.themeMode==='thikr'?'var(--gold-100)':'transparent'}; color:var(--text); cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; font-family:inherit;">
+          <button onclick="settingsSetTheme('thikr')" style="flex:1; padding:12px 6px; border-radius:12px; border:1.5px solid ${(!s.themeAuto && s.themeMode==='thikr')?'var(--gold-500)':'var(--tabbar-border)'}; background:${(!s.themeAuto && s.themeMode==='thikr')?'var(--gold-100)':'transparent'}; color:var(--text); cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; font-family:inherit;">
             ${sparkleIcon(20)}<span style="font-size:12px; font-weight:700;">${t('theme_thikr')}</span>
           </button>
         </div>
